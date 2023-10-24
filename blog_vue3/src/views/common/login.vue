@@ -1,63 +1,91 @@
 <script>
 import axios from "axios";
+import {ref, reactive, getCurrentInstance} from "vue";
+import {useRoute, useRouter} from "vue-router";
+import {ElMessage} from "element-plus";
+import {useStore} from "vuex"
 
 export default {
 
+
   name: 'Login',
 
-  data() {
-    return {
-      form: {
-        username: '',
-        password: '',
-        userKey: '',
-        code: '',
-      },
-      captcherImg: ''
+  setup() {
 
-    }
-  },
+    const {$http} = getCurrentInstance().appContext.config.globalProperties
+    const router = useRouter()
+    const route = useRoute()
+    const store = new useStore()
+
+    let form = reactive({
+      username: '',
+      password: '',
+      userKey: '',
+      code: ''
+    })
+
+    let captcherImg = ref('')
 
 
-  methods: {
+    form.username = route.query.username ? route.query.username : ''
 
-    login() {
+
+    function login() {
+
       let formData = new FormData();
-      for (let key in this.form) {
-        formData.append(key, this.form[key]);
+
+      for (let key in form) {
+        formData.append(key, form[key]);
       }
-      axios.post('/api/login', formData).then(response => {
+
+      axios.post('/identify/login', formData).then(response => {
         let getToken = response.headers['authorization']
         if (getToken !== undefined && getToken !== null) {
-          this.$store.commit('identify/SET_TOKEN', getToken)
-          this.$message.info("登录成功")
-          this.$router.push({path: '/home'})
+          store.commit('identify/SET_TOKEN', getToken)
+          ElMessage.success(response.data.data)
+          router.push({path: '/home', query: {username: route.query.username}})
+        } else {
+          getCode()
+          ElMessage.error(response.data.data)
         }
-      })
-    },
-
-    changeCode() {
-      this.getCode()
-    },
-
-    getCode() {
-      this.$http({
-        url: this.$http.adornUrl('/blog/identify/captcha'),
-        method: "get",
-      }).then(({data}) => {
-        this.form.userKey = data.data.userKey
-        this.captcherImg = data.data.captcherImg
       })
     }
 
+    function changeCode() {
+      getCode()
+    }
+
+
+    function getCode() {
+      $http({
+        url: '/identify/captcha',
+        method: "get",
+      }).then(({data}) => {
+        form.userKey = data.data.userKey
+        captcherImg.value = data.data.captcherImg
+      })
+    }
+
+    function toRegister() {
+      router.push({path: '/register'})
+    }
+
+
+    return {
+      form,
+      captcherImg,
+      login,
+      changeCode,
+      getCode,
+      toRegister
+    }
 
   },
+
 
   mounted() {
     this.getCode()
   },
-
-  computed: {}
 
 
 }
@@ -72,18 +100,19 @@ export default {
       label-width="100px"
       style="max-width: 460px"
   >
-    <el-form-item label="username" name="username">
+    <el-form-item label="账号" name="username">
       <el-input v-model="form.username"/>
     </el-form-item>
-    <el-form-item label="password" name="password">
-      <el-input v-model="form.password"/>
+    <el-form-item label="密码" name="password">
+      <el-input v-model="form.password" show-password/>
     </el-form-item>
-    <el-form-item label="code" name="code">
+    <el-form-item label="验证码" name="code">
       <el-input v-model="form.code"/>
     </el-form-item>
-    <img :src="this.captcherImg" @click="changeCode" alt="显示错误">
+    <img :src="captcherImg" @click="changeCode" alt="显示错误">
     <el-form-item>
       <el-button type="primary" round @click="login">登录</el-button>
+      <el-button type="primary" round @click="toRegister">注册</el-button>
     </el-form-item>
   </el-form>
 

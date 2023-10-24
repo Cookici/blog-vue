@@ -1,6 +1,6 @@
 import axios from "axios";
-import {useRouter} from "vue-router";
 import merge from "lodash/merge"
+import router from "../router";
 
 
 const http = axios.create({
@@ -24,23 +24,29 @@ http.interceptors.request.use(config => {
 
 
 /**
- * 请求地址处理
- * @param {*} actionName action方法名称
- */
-http.adornUrl = (actionName) => {
-    // 非生产环境 && 开启代理, 接口前缀统一使用[/proxyApi/]前缀做代理拦截!
-    return "/api" + actionName
-}
-
-/**
  * 响应拦截
  */
 http.interceptors.response.use(response => {
-    if (response.data && response.data.code === 401) { // 401, token失效
-        useRouter.push({path: '/login'})
+    if (response.data.code === 401) { // 401, token失效 或 错误token
+        localStorage.removeItem('token');
+        if(response.data.config.url==='/identify/blog/identify/register'){
+            localStorage.removeItem('token')
+            alert("发现异常操作,请重新注册")
+            return response;
+        }
+        router.push({path: '/login'})
     }
     return response
 }, error => {
+    if (error.response.data.code === 401) { // 401, token失效 或 错误token
+        localStorage.removeItem('token')
+        if(error.config.url==='/identify/blog/identify/register'){
+            localStorage.removeItem('token')
+            alert("发现异常操作,请重新注册")
+            return Promise.reject(error);
+        }
+        router.push({path: '/login'})
+    }
     return Promise.reject(error)
 })
 
