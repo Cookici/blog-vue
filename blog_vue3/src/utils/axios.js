@@ -27,15 +27,6 @@ http.interceptors.request.use(config => {
  * 响应拦截
  */
 http.interceptors.response.use(response => {
-    if (response.data.code === 401) { // 401, token失效 或 错误token
-        localStorage.removeItem('token');
-        if(response.data.config.url==='/identify/blog/identify/register'){
-            localStorage.removeItem('token')
-            alert("发现异常操作,请重新注册")
-            return response;
-        }
-        router.push({path: '/login'})
-    }
     return response
 }, error => {
     if (error.response.data.code === 401) { // 401, token失效 或 错误token

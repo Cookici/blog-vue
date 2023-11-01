@@ -32,7 +32,10 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
 
 
-    if (to.name !== 'Login' && to.name !== 'Register' && (localStorage.getItem('token') === null || localStorage.getItem('token') === undefined)) {
+    if (to.name !== 'Login' && to.name !== 'Register'
+        &&
+        (localStorage.getItem('token') === null || localStorage.getItem('token') === undefined)
+    ) {
         if (to.name === 'Register') {
             next({name: 'Register'})
         }
