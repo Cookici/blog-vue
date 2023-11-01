@@ -1,35 +1,41 @@
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
-import {userStore} from "../../stores/user.ts";
+import {getCurrentInstance, onMounted, ref} from 'vue'
 
-const UserStore = userStore()
+interface Blog {
+  articleCommentCount: number;
+  articleContent: string;
+  articleDate: string;
+  articleId: number;
+  articleLikeCount: number;
+  articleTitle: string;
+  articleViews: number;
+  blogUsers: User;
+}
+
+interface User {
+  userId: string;
+  userIp: string;
+  userName: string;
+  userPassword: null;
+  userEmail: string;
+  userProfilePhoto: string;
+  userRegistrationTime: string
+  userBirthday: string;
+  userAge: string;
+  userTelephoneNumber: string;
+  userNickname: string;
+  userLevel: string;
+  userAuthority: string;
+}
+
+
+const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 
 let keyword = ref('')
-let blogPosts = ref([
-      {
-        id: 1,
-        authorAvatar: 'https://lrh-blog-project.oss-cn-beijing.aliyuncs.com/%E5%93%88.jpg',
-        authorUsername: 'User1',
-        authorAccount: 'user1_account',
-        title: 'First Blog Post',
-        content: 'This is the content of the first blog post.',
-        views: 100,
-        likes: 20,
-      },
-      {
-        id: 2,
-        authorAvatar: 'https://lrh-blog-project.oss-cn-beijing.aliyuncs.com/%E5%93%88.jpg',
-        authorUsername: 'User2',
-        authorAccount: 'user2_account',
-        title: 'Second Blog Post',
-        content: 'This is the content of the second blog post.',
-        views: 85,
-        likes: 15,
-      },
-    ]
-)
-
-let user = UserStore.$state.user
+let page = ref(1)
+let total = ref(0)
+let pageAll = ref(0)
+let blogsAndItsUser : Blog[] = ref([])
 
 const search = () => {
   if (keyword.value !== '') {
@@ -37,10 +43,25 @@ const search = () => {
   }
 }
 
-onMounted(() => {
 
+const getPage = () => {
+  $http({
+    url: `/article/blog/articles/getAll/${page.value}`,
+    method: "get",
+  }).then(({data}: { data: any }) => {
+    console.log(data.data)
+    blogsAndItsUser.value = data.data.data
+    total.value = data.data.total
+    pageAll.value = data.data.pageAll
+  })
+}
+
+onMounted(() => {
+  getPage()
 })
 
+
+let user : User= JSON.parse(sessionStorage.getItem('user')).user
 
 </script>
 
@@ -90,8 +111,7 @@ onMounted(() => {
             <li class="nav-item">个人中心
             </li>
             <li class="nav-item">在线聊天</li>
-            <li class="nav-item">私信回复
-            </li>
+            <li class="nav-item">阅读私信</li>
             <li class="nav-item">历史记录</li>
           </ul>
         </div>
@@ -99,19 +119,21 @@ onMounted(() => {
     </div>
 
     <div class="content">
-      <div class="blog-post" v-for="post in blogPosts" :key="post.id">
+      <div class="blog-post" v-for="blog in blogsAndItsUser as Blog" :key="blog.articleId">
         <div class="author-info">
-          <img class="author-avatar" :src="post.authorAvatar" alt="Author Avatar">
+          <img class="author-avatar" :src="blog.blogUsers.userProfilePhoto" alt="Author Avatar">
           <div>
-            <span class="author-username">{{ post.authorUsername }}</span>
-            <span> ({{ post.authorAccount }})</span>
+            <span class="author-username">{{ ((blog as Blog).blogUsers as User)?.userNickname }}</span>
+            <span> ({{ ((blog as Blog).blogUsers as User)?.userName }})</span><br>
+            <span class="user-level">Level: {{ ((blog as Blog).blogUsers as User)?.userLevel }}</span>
           </div>
+          <div class="post-time">{{ (blog as Blog)?.articleDate.replace(new RegExp('T'),"     ") }}</div>
         </div>
-        <h2 class="article-title">{{ post.title }}</h2>
-        <p class="article-content">{{ post.content.substring(0, 200) }}...</p>
+        <h2 class="article-title">{{ (blog as Blog)?.articleTitle }}</h2>
+        <p class="article-content">{{ (blog as Blog)?.articleContent.substring(0, 50) }}...</p>
         <div class="article-stats">
-          <span>浏览量: {{ post.views }}</span>
-          <span>点赞量: {{ post.likes }}</span>
+          <span>浏览量: {{ (blog as Blog)?.articleViews }}</span>
+          <span>点赞量: {{ (blog as Blog)?.articleLikeCount }}</span>
         </div>
       </div>
     </div>
@@ -222,6 +244,7 @@ onMounted(() => {
 .author-info {
   display: flex;
   align-items: center;
+  /* Other styles for author-info */
 }
 
 .author-avatar {
@@ -231,8 +254,14 @@ onMounted(() => {
   margin-right: 10px;
 }
 
-.author-username {
-  font-weight: bold;
+.info {
+  flex-grow: 1; /* 让 "info" 占据剩余的空间 */
+}
+
+.post-time {
+  font-size: 14px; /* 设置时间元素的字体大小 */
+  color: #555;
+  margin-left: auto; /* 将时间元素推到右侧 */
 }
 
 .article-title {

@@ -1,5 +1,6 @@
 import {defineStore} from "pinia";
 
+
 export const userStore = defineStore('user', {
 
     state: () => {
@@ -7,19 +8,27 @@ export const userStore = defineStore('user', {
             user: null as User | null,
         }
     },
+
     actions: {
-        setUser(user : User){
+        setUser(user: User) {
             this.user = user
         }
+    },
+
+    persist:{
+        enabled:true,
+        strategies: [
+            { storage: sessionStorage, paths: ['user'] }
+        ],
     }
 
 })
 
-interface User{
+interface User {
     userId: string;
     userIp: string;
     userName: string;
-    userPassword:null;
+    userPassword: null;
     userEmail: string;
     userProfilePhoto: string;
     userRegistrationTime: string

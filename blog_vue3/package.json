@@ -10,6 +10,7 @@
     "element-plus": "^2.4.1",
     "lodash": "^4.17.21",
     "pinia": "^2.1.7",
+    "pinia-plugin-persist": "^1.0.0",
     "typescript": "^5.2.2",
     "uuid": "^9.0.1",
     "vue": "^3.3.6",
