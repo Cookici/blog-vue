@@ -70,7 +70,7 @@ const doRegister = () => {
                 router.push({path: '/login', query: {username: blogUser.userName}})
               }
             }
-        )).catch((error) => {
+        )).catch(() => {
       ElMessage.error({message: "注册失败"})
     })
   }

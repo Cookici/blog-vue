@@ -1,4 +1,5 @@
 import {defineStore} from "pinia";
+import {User} from "../models/user.model.ts";
 
 
 export const userStore = defineStore('user', {
@@ -15,27 +16,12 @@ export const userStore = defineStore('user', {
         }
     },
 
-    persist:{
-        enabled:true,
+    persist: {
+        enabled: true,
         strategies: [
-            { storage: sessionStorage, paths: ['user'] }
+            {storage: localStorage, paths: ['user']}
         ],
     }
 
 })
 
-interface User {
-    userId: string;
-    userIp: string;
-    userName: string;
-    userPassword: null;
-    userEmail: string;
-    userProfilePhoto: string;
-    userRegistrationTime: string
-    userBirthday: string;
-    userAge: string;
-    userTelephoneNumber: string;
-    userNickname: string;
-    userLevel: string;
-    userAuthority: string;
-}

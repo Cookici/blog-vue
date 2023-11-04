@@ -1,6 +1,8 @@
 import axios from "axios";
 import merge from "lodash/merge"
 import router from "../router";
+import {ElMessage} from "element-plus";
+import qs from 'qs'
 
 
 const http = axios.create({
@@ -31,11 +33,7 @@ http.interceptors.response.use(response => {
 }, error => {
     if (error.response.data.code === 401) { // 401, token失效 或 错误token
         localStorage.removeItem('token')
-        if(error.config.url==='/identify/blog/identify/register'){
-            localStorage.removeItem('token')
-            alert("发现异常操作,请重新注册")
-            return Promise.reject(error);
-        }
+        ElMessage.error("登录过期,请重新登录")
         router.push({path: '/login'})
     }
     return Promise.reject(error)
@@ -67,7 +65,7 @@ http.adornData = (data = {}, openDefaultData = true, contentType = 'json') => {
         't': new Date().getTime()
     }
     data = openDefaultData ? merge(defaults, data) : data
-    return contentType === 'json' ? JSON.stringify(data) : qs.stringify(data)
+    return contentType === 'json' ? JSON.stringify(data) : qs.stringify(data,{arrayFormat: 'repeat'})
 }
 
 export default http

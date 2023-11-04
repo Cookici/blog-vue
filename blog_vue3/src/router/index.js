@@ -14,13 +14,26 @@ const routes = [
     {
         path: '/home',
         name: 'Home',
-        component: () => import("../views/common/home.vue")
+        component: () => import("../views/home.vue"),
+        children: [
+            {
+                path: '/home/content/showArticle',
+                name: 'ShowArticle',
+                component: () => import("../views/article/showArticle.vue")
+            },
+            {
+                path: '/home/content',
+                name: 'Content',
+                component: () => import("../views/article/content.vue")
+            },
+        ]
     },
     {
         path: '/register',
         name: 'Register',
         component: () => import("../views/common/register.vue")
-    }
+    },
+
 ]
 
 

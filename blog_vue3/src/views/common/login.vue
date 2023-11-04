@@ -5,6 +5,7 @@ import {useRoute, useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 import {tokenStore} from "../../stores/token.ts";
 import {userStore} from "../../stores/user.ts";
+import {User} from "../../models/user.model.ts";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 const router = useRouter()
@@ -53,8 +54,8 @@ const getUser = () => {
     url: `identify/blog/identify/get/${form.username}`,
     method: "get",
   }).then(({data}: { data: any }) => {
-    UserStore.setUser(data.data)
-    router.push({path: '/home'})
+    UserStore.setUser(data.data as User)
+    router.push({path: '/home/content'})
   })
 }
 
