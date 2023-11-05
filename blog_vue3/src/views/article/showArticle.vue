@@ -4,6 +4,7 @@ import {onMounted, reactive, Ref, ref, UnwrapRef} from "vue";
 import {Blog} from "../../models/blog.model.ts";
 import {getCurrentInstance, toRaw} from "vue";
 import {useRouter, useRoute} from "vue-router";
+import {ElMessage, ElMessageBox} from "element-plus";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 const router = useRouter()
@@ -16,22 +17,27 @@ let articleNumber = ref(0)
 let articleList: Ref<UnwrapRef<any[]>> = ref([])
 let currentBlogId = ref(route.query.id)
 
-console.log(currentBlogId)
+const addFriend = () => {
+  ElMessageBox.confirm(`是否添加${blogAndUser.blogUsers.userName}为好友`, "提示", {}).then(() => {
+    ElMessage.success("添加成功")
+  }).catch(() => {
+    ElMessage.success("取消成功")
+  })
+}
 
 const getUserDetail = () => {
   $http({
     url: `/article/blog/articles/getUserDetail/${blogAndUser.blogUsers.userId}`,
     method: "get",
   }).then(({data}: { data: any }) => {
-    console.log(data.data)
     likes.value = data.data.like
     views.value = data.data.views
     articleNumber.value = data.data.articleNumber
     articleList.value = data.data.articleList
+    document.getElementById('article-content').innerHTML = blogAndUser.articleContent
   })
 
 }
-
 
 const articleDetail = (blog: Blog) => {
   blog = toRaw(blog)
@@ -40,7 +46,7 @@ const articleDetail = (blog: Blog) => {
 }
 
 onMounted(() => {
-  getUserDetail()
+  getUserDetail();
 })
 
 </script>
@@ -51,8 +57,8 @@ onMounted(() => {
 
     <div class="user-left">
       <div class="user-card">
-        <font-awesome-icon :icon="['fas', 'user']" style="position: relative;margin-right: auto "/>
-        <img class="user-image" :src="blogAndUser.blogUsers.userProfilePhoto" alt="User Image">
+          <font-awesome-icon :icon="['fas', 'user']" style="position: relative;margin-right: auto "/>
+        <img class="user-image" :src="blogAndUser.blogUsers.userProfilePhoto" alt="User Image" @click="addFriend">
         <div class="user-info">
           <div class="user-details">
             <h3>昵称：{{ blogAndUser.blogUsers.userNickname }}</h3>
@@ -118,9 +124,10 @@ onMounted(() => {
 
     <div class="article-right">
       <div class="article-title">
-        {{ blogAndUser.articleTitle }}
+        <h1>{{ blogAndUser.articleTitle }}</h1>
+
       </div>
-      <div class="article-content">
+      <div class="article-content" id="article-content">
 
       </div>
     </div>
@@ -181,6 +188,13 @@ onMounted(() => {
   height: 80px;
   border-radius: 100%;
   object-fit: cover;
+  cursor: pointer;
+}
+
+.user-image:hover{
+  box-shadow: 2px 2px 30px rgba(4, 15, 29, 0.1);
+  transform: scale(1.01);
+  transition: all ease 0.1s;
 }
 
 .user-info {
@@ -212,7 +226,7 @@ onMounted(() => {
   word-break: normal;
 }
 
-.article-title{
+.article-title {
   position: relative;
   left: 2px;
   text-align: center;

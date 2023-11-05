@@ -26,6 +26,16 @@ const routes = [
                 name: 'Content',
                 component: () => import("../views/article/content.vue")
             },
+            {
+                path: '/home/content/historyImg',
+                name: 'HistoryImg',
+                component: () => import("../components/historyImg.vue")
+            },
+            {
+                path: '/home/subArticle',
+                name: 'SubmitArticle',
+                component: () => import("../views/article/submitArticle.vue")
+            }
         ]
     },
     {
@@ -43,7 +53,6 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-
 
     if (to.name !== 'Login' && to.name !== 'Register'
         &&

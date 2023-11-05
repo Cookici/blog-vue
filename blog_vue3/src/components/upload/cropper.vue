@@ -5,7 +5,9 @@
         <el-row>
           <el-col :span="16">
             <div class="cropper">
-              <el-icon style="position: absolute;right: 10px;cursor: pointer;font-size: 25px" @click="close"><CloseBold /></el-icon>
+              <el-icon style="position: absolute;right: 10px;cursor: pointer;font-size: 25px" @click="close">
+                <CloseBold/>
+              </el-icon>
               <vue-cropper
                   ref="cropper"
                   :img="option.img"
@@ -36,7 +38,7 @@
           </el-col>
           <el-col :span="8">
             <!--预览效果图-->
-            <div class="show-preview" >
+            <div class="show-preview">
               <div :style="previews.div" class="preview">
                 <img :src="previews.url" :style="previews.img">
               </div>
@@ -47,32 +49,32 @@
 
       <el-footer>
         <div class="upload-container">
-              <el-upload
-                  ref="upload"
-                  class="upload"
-                  action="http://lrh-blog-project.oss-cn-beijing.aliyuncs.com"
-                  list-type='picture'
-                  :limit="1"
-                  :on-exceed="handleExceed"
-                  :auto-upload="false"
-                  :data="oss"
-                  :file-list="fileList"
-                  :on-success="handleSuccess"
-                  :on-change="handleChange"
-                  :on-remove="handleRemove"
-              >
-                <template #trigger>
-                  <el-button type="primary" style="margin-right: 50px">选择图片</el-button>
-                </template>
-                <el-button type="success" style="margin-left: 50px" @click="submitUpload" :disabled="noSubmit">
-                  上传头像
-                </el-button>
-                <template #tip>
-                  <div class="el-upload__tip text-red">
-                    limit 1 file, new file will cover the old file
-                  </div>
-                </template>
-              </el-upload>
+          <el-upload
+              ref="upload"
+              class="upload"
+              action="http://lrh-blog-project.oss-cn-beijing.aliyuncs.com"
+              list-type='picture'
+              :limit="1"
+              :on-exceed="handleExceed"
+              :auto-upload="false"
+              :data="oss"
+              :file-list="fileList"
+              :on-success="handleSuccess"
+              :on-change="handleChange"
+              :on-remove="handleRemove"
+          >
+            <template #trigger>
+              <el-button type="primary" style="margin-right: 50px">选择图片</el-button>
+            </template>
+            <el-button type="success" style="margin-left: 50px" @click="submitUpload" :disabled="noSubmit">
+              上传头像
+            </el-button>
+            <template #tip>
+              <div class="el-upload__tip text-red">
+                limit 1 file, new file will cover the old file
+              </div>
+            </template>
+          </el-upload>
 
         </div>
       </el-footer>
@@ -83,17 +85,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  getCurrentInstance,
-  onBeforeMount,
-  onBeforeUnmount,
-  onBeforeUpdate,
-  onMounted, onUnmounted,
-  onUpdated,
-  reactive,
-  ref, toRaw
-} from 'vue'
+import {computed, getCurrentInstance, reactive, ref} from 'vue'
 import {ElMessage, ElMessageBox, genFileId, UploadFile} from 'element-plus'
 import type {UploadInstance, UploadProps, UploadRawFile} from 'element-plus'
 import {policy} from "./policy.js";
@@ -103,7 +95,6 @@ import {User} from "../../models/user.model.ts";
 
 
 const imgLoad = (msg: string) => {
-  console.log("cropper初始化函数=====>" + msg)
   noSubmit.value = false
 }
 
@@ -161,17 +152,17 @@ const props = defineProps({
   dialogVisible: Boolean
 })
 
-const emit = defineEmits(['update:canPointer','update:dialogVisible'])
-const close:() => void = () => {
-  emit('update:canPointer',  canPointer = 'none')
-  emit('update:dialogVisible',dialogVisible = !dialogVisible)
+const emit = defineEmits(['update:canPointer', 'update:dialogVisible'])
+const close: () => void = () => {
+  emit('update:canPointer', canPointer = 'none')
+  emit('update:dialogVisible', dialogVisible = !dialogVisible)
 }
 
-let canPointer = computed(()=>{
+let canPointer = computed(() => {
   return props?.canPointer
 })
 
-let dialogVisible = computed(()=>{
+let dialogVisible = computed(() => {
   return props?.dialogVisible
 })
 
@@ -218,6 +209,8 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
   upload.value!.handleStart(file)
 }
 
+const uploadPhotoUrl = ref('')
+
 
 const submitUpload = () => {
   upload.value!.clearFiles()
@@ -242,7 +235,7 @@ const submitUpload = () => {
     getPolicy().then(() => {
       upload.value!.submit()
     }).then(() => {
-      (UserStore.user as User).userProfilePhoto = oss.host + "/" + oss.key
+      uploadPhotoUrl.value = oss.host + "/" + oss.key
     })
   }).catch(() => {
     ElMessage.success("已取消修改")
@@ -260,9 +253,10 @@ const updatePhoto = () => {
   $http({
     url: '/identify/blog/identify/updateUserPhoto',
     method: 'put',
-    data: $http.adornData({id: (UserStore.user as User).userId as number, photoUrl: (UserStore.user as User).userProfilePhoto as string}, false, 'form')
+    data: $http.adornData({id: UserStore.user?.userId, photoUrl: uploadPhotoUrl.value}, false, 'form')
   }).then(({data}: { data: any }) => {
     if (data.data === 1) {
+      (UserStore.user as User).userProfilePhoto = uploadPhotoUrl.value
       ElMessage.success("更新成功")
     } else {
       ElMessage.error("更新无效")
@@ -279,7 +273,7 @@ const handleChange = (uploadFile: UploadFile) => {
   cropperFileType.value = uploadFile.name.substring(uploadFile.name.lastIndexOf(".") + 1, uploadFile.name.length)
 }
 
-const handleSuccess = (response: any, uploadFile: UploadFile) => {
+const handleSuccess = (response, uploadFile: UploadFile) => {
   if (uploadFile.status === 'success') {
     updatePhoto()
     setTimeout(() => {
@@ -299,10 +293,8 @@ const getPolicy = () => {
       oss.key = response.data.dir + `${props.userName}:` + v4() + `.${cropperFileType.value}`;
       oss.dir = response.data.dir;
       oss.host = response.data.host;
-      console.log("响应的数据 ===> ", response);
       resolve(true)
     }).catch((err: any) => {
-      console.log(err)
       reject(false)
     })
   })
@@ -327,36 +319,33 @@ const getPolicy = () => {
   }
 
 
-  .cropper{
+  .cropper {
     width: 380px;
     height: 380px;
   }
 
 
-  .show-preview{
+  .show-preview {
     padding-top: 50%;
     flex: 1;
     justify-content: center;
     display: flex;
 
-    .preview{
+    .preview {
       overflow: hidden;
-      border:1px solid #67c23a;
+      border: 1px solid #67c23a;
       background-color: #757575;
     }
   }
 
 
-  .upload-container{
+  .upload-container {
     text-align: center;
     align-items: center;
     justify-content: center;
     justify-items: center;
 
   }
-
-
-
 
 
 }

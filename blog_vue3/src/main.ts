@@ -1,23 +1,24 @@
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+import {createApp} from 'vue'
+import {createPinia} from 'pinia'
+import {library} from '@fortawesome/fontawesome-svg-core'
+import {fas} from '@fortawesome/free-solid-svg-icons'
+import {far} from '@fortawesome/free-regular-svg-icons'
+import {fab} from '@fortawesome/free-brands-svg-icons'
+import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
+import {QuillEditor} from "@vueup/vue-quill";
 import App from './App.vue'
 import router from "./router/index.js";
 import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
 import http from "./utils/axios.js";
+import VueCropper from 'vue-cropper';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import piniaPersist from 'pinia-plugin-persist'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { fas } from '@fortawesome/free-solid-svg-icons'
-import { far } from '@fortawesome/free-regular-svg-icons'
-import { fab } from '@fortawesome/free-brands-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import VueCropper from 'vue-cropper';
 import 'vue-cropper/dist/index.css'
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
+import 'element-plus/dist/index.css'
 
 
-
-library.add(fas,far,fab)
+library.add(fas, far, fab)
 
 const pinia = createPinia()
 pinia.use(piniaPersist)
@@ -26,7 +27,12 @@ const app = createApp(App as any);
 
 app.config.globalProperties.$http = http
 
-app.use(router).use(ElementPlus).use(pinia).component('font-awesome-icon', FontAwesomeIcon).use(VueCropper)
+app.use(router)
+    .use(ElementPlus)
+    .use(pinia)
+    .use(VueCropper)
+    .component('font-awesome-icon', FontAwesomeIcon)
+    .component('QuillEditor', QuillEditor)
 
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

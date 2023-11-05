@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {getCurrentInstance, reactive, ref} from 'vue'
+import {getCurrentInstance, ref} from 'vue'
 import {User} from "../models/user.model.ts";
 import {ElMessage} from "element-plus";
 import {tokenStore} from "../stores/token.ts";
@@ -47,6 +47,10 @@ const open = () => {
 }
 
 
+const seeDetail = () => {
+  router.push({path: '/home/content/historyImg'})
+}
+
 let user: User = JSON.parse(localStorage.getItem('user') as any).user
 
 
@@ -64,6 +68,7 @@ let user: User = JSON.parse(localStorage.getItem('user') as any).user
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="open">修改头像</el-dropdown-item>
+                <el-dropdown-item @click="seeDetail">历史头像</el-dropdown-item>
                 <el-dropdown-item @click="logout">退出</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -110,15 +115,15 @@ let user: User = JSON.parse(localStorage.getItem('user') as any).user
           >
             <div class="flex-grow"/>
             <el-menu-item index="/home/content">博客主页</el-menu-item>
+            <el-menu-item index="/home/subArticle">发表博客</el-menu-item>
             <el-menu-item index="2">个人中心</el-menu-item>
             <el-menu-item index="3">好友列表</el-menu-item>
-            <el-menu-item index="4">浏览历史</el-menu-item>
           </el-menu>
         </div>
       </el-col>
     </div>
 
-    <router-view :key="$route.fullPath"></router-view>
+      <router-view :key="$route.fullPath"></router-view>
 
   </div>
 

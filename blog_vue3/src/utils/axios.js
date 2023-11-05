@@ -65,6 +65,7 @@ http.adornData = (data = {}, openDefaultData = true, contentType = 'json') => {
         't': new Date().getTime()
     }
     data = openDefaultData ? merge(defaults, data) : data
+    console.log(qs.stringify(data))
     return contentType === 'json' ? JSON.stringify(data) : qs.stringify(data,{arrayFormat: 'repeat'})
 }
 

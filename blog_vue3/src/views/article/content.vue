@@ -3,21 +3,21 @@ import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 import {getCurrentInstance, onMounted, Ref, ref, toRaw} from "vue";
 import {useRouter} from "vue-router";
 import {Blog} from "../../models/blog.model.ts";
-
+import {pageStore} from "../../stores/page.ts";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 const router = useRouter()
+const PageStore = pageStore()
 
 
 
-
-let page = ref(1)
 let total = ref(0)
 let pageAll = ref(0)
 let blogsAndItsUser: Ref<Blog[]> = ref([])
 
+
 const handleCurrentChange = (val: number) => {
-  page.value = val
+  PageStore.page = val
   getPage()
 }
 
@@ -28,7 +28,7 @@ const articleDetail = (blog: Blog) => {
 
 const getPage = () => {
   $http({
-    url: `/article/blog/articles/getAll/${page.value}`,
+    url: `/article/blog/articles/getAll/${PageStore.page}`,
     method: "get",
   }).then(({data}: { data: any }) => {
     blogsAndItsUser.value = data.data.data
@@ -36,8 +36,6 @@ const getPage = () => {
     pageAll.value = data.data.pageAll
   })
 }
-
-
 
 onMounted(() => {
   getPage()
@@ -59,10 +57,10 @@ onMounted(() => {
                 <span style="font-weight: 100;color: #96969b"> {{ blog.blogUsers.userName }}</span><br>
                 <span class="user-level colorful">level: {{ blog.blogUsers.userLevel }}</span>
               </div>
-              <div class="post-time">{{ blog.articleDate.replace(new RegExp('T'), "     ") }}</div>
+              <div class="post-time">{{ blog.articleDate.replace(new RegExp('T'), " ") }}</div>
             </div>
             <h2 class="article-title">{{ blog.articleTitle }}</h2>
-            <p class="article-content">{{ blog.articleContent.substring(0, 50) }}...</p>
+            <p class="article-content">{{ blog.articleContent.replace(/<[^>]+>/g, '').substring(0, 50) }}...</p>
             <div class="article-stats">
           <span>
             <font-awesome-icon :icon="['fas', 'eye']"/>&nbsp;{{ blog.articleViews }}
@@ -79,7 +77,7 @@ onMounted(() => {
               <el-col :span="8">
                 <el-pagination
                     style=" margin: 30px 30px 30px 40px;"
-                    v-model:current-page="page"
+                    v-model:current-page="PageStore.page"
                     v-model:page-count="pageAll"
                     :small="false"
                     background layout="prev, pager, next, jumper"
