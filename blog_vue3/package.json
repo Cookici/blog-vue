@@ -11,6 +11,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.4.2",
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@fortawesome/vue-fontawesome": "^3.0.3",
+    "@tinymce/tinymce-vue": "^5.1.1",
     "@vueup/vue-quill": "^1.2.0",
     "axios": "^1.5.1",
     "element-plus": "^2.4.1",

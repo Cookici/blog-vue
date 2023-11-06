@@ -22,10 +22,10 @@ import {Photo} from "../models/photo.model.ts";
 import {userStore} from "../stores/user.ts";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {User} from "../models/user.model.ts";
-import router from "../router";
+import {useRouter} from "vue-router";
 
 const UserStore = userStore()
-
+const router = useRouter()
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 
 let photos: Ref<Photo[]> = ref([])
@@ -88,7 +88,7 @@ const loveBack = (userId, photo) => {
 }
 
 .card-position {
-  margin-top: 9%;
+  margin-top: 8%;
   overflow: hidden;
   border-radius:20px;
   border: #96969b solid 0.01rem;

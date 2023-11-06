@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from "axios";
-import {ref, onMounted, reactive, getCurrentInstance} from "vue";
+import {ref, onMounted, reactive, getCurrentInstance, nextTick} from "vue";
 import {useRoute, useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
 import {tokenStore} from "../../stores/token.ts";
@@ -55,7 +55,11 @@ const getUser = () => {
     method: "get",
   }).then(({data}: { data: any }) => {
     UserStore.setUser(data.data as User)
-    router.push({path: '/home/content'})
+    router.push({path: '/home/content'}).then(()=>{
+      nextTick(()=>{
+        window.location.reload()
+      })
+    })
   })
 }
 

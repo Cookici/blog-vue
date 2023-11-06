@@ -5,10 +5,12 @@ import {Blog} from "../../models/blog.model.ts";
 import {getCurrentInstance, toRaw} from "vue";
 import {useRouter, useRoute} from "vue-router";
 import {ElMessage, ElMessageBox} from "element-plus";
+import {userStore} from "../../stores/user.ts";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 const router = useRouter()
 const route = useRoute()
+const UserStore = userStore()
 
 let blogAndUser: Blog = reactive(history.state.blog);
 let likes = ref(0)
@@ -45,8 +47,50 @@ const articleDetail = (blog: Blog) => {
   router.replace({path: '/home/content/showArticle', query: {id: blog.articleId}, state: {blog}})
 }
 
+let color = ref('')
+
+const toLike = () => {
+  ElMessageBox.confirm("提示", "是否点赞该文章").then(() => {
+    let isLike = localStorage.getItem(`isLike${blogAndUser.articleId}`)
+    if (isLike !== `${UserStore.user?.userId}${blogAndUser.articleId}`) {
+      updateLike()
+      return
+    }
+    ElMessage.warning("你已经点过赞了")
+  }).catch(() => {
+    ElMessage.success("取消成功")
+  })
+
+}
+
+const updateLike = () => {
+  $http({
+    url: `/article/blog/articles/addLike/${blogAndUser.articleId}`,
+    method: "post",
+  }).then(({data}: { data: any }) => {
+    if (data.data === 1) {
+      blogAndUser.articleLikeCount++
+      localStorage.setItem(`isLike${blogAndUser.articleId}`, `${UserStore.user?.userId}${blogAndUser.articleId}`)
+      color.value = '#ff0000'
+      ElMessage.success("点赞成功")
+    }else{
+      ElMessage.error("未知错误")
+    }
+  })
+}
+
+const judgeLike = () => {
+  let isLike = localStorage.getItem(`isLike${blogAndUser.articleId}`)
+  if (isLike !== `${UserStore.user?.userId}${blogAndUser.articleId}`) {
+    color.value = ''
+  } else {
+    color.value = '#ff0000'
+  }
+}
+
 onMounted(() => {
   getUserDetail();
+  judgeLike()
 })
 
 </script>
@@ -57,7 +101,7 @@ onMounted(() => {
 
     <div class="user-left">
       <div class="user-card">
-          <font-awesome-icon :icon="['fas', 'user']" style="position: relative;margin-right: auto "/>
+        <font-awesome-icon :icon="['fas', 'user']" style="position: relative;margin-right: auto "/>
         <img class="user-image" :src="blogAndUser.blogUsers.userProfilePhoto" alt="User Image" @click="addFriend">
         <div class="user-info">
           <div class="user-details">
@@ -99,7 +143,7 @@ onMounted(() => {
           {{ article.articleTitle }}
         </div>
         <div class="blog-content">
-          {{ article.articleContent.substring(0, 20) }}...
+          {{ article.articleContent.replace(/<[^>]+>/g, '').substring(0, 20) }}...
         </div>
         <div class="view-like-stats">
           <div class="data-time">
@@ -117,16 +161,30 @@ onMounted(() => {
         </div>
       </div>
 
-      <el-link style="color: #656e70">查看所有文章</el-link>
+      <el-link style="color: #656e70" v-if="articleList.length>4">查看所有文章</el-link>
 
     </div>
 
 
     <div class="article-right">
       <div class="article-title">
+        <div>
+          <el-row>
+            <el-col :span="8"></el-col>
+            <el-col :span="8"></el-col>
+            <el-col :span="8" style="text-align: right">
+              <font-awesome-icon :icon="['fas', 'eye']" style="font-size: 25px"/>
+              {{ blogAndUser.articleViews }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              <font-awesome-icon :icon="['fas', 'heart']" :style="{cursor: 'pointer',fontSize: '25px',color: color}"
+                                 @click="toLike"/>
+              {{ blogAndUser.articleLikeCount }}
+            </el-col>
+          </el-row>
+        </div>
         <h1>{{ blogAndUser.articleTitle }}</h1>
-
       </div>
+
+
       <div class="article-content" id="article-content">
 
       </div>
@@ -191,7 +249,7 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.user-image:hover{
+.user-image:hover {
   box-shadow: 2px 2px 30px rgba(4, 15, 29, 0.1);
   transform: scale(1.01);
   transition: all ease 0.1s;
