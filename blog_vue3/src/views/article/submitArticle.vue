@@ -43,11 +43,12 @@ import 'tinymce/plugins/visualchars'; //显示不可见字符
 import 'tinymce/plugins/wordcount';
 import {policy} from "../../components/upload/policy.js";
 import {v4} from "uuid";
-import {User} from "../../models/user.model.ts";
-import axios from "axios"; //字数统计
+import axios from "axios";
+import {activeIndexStore} from "../../stores/activeIndex.ts";
 // import 'tinymce/plugins/imagetools'; //存在bug
 
 const UserStore = userStore()
+const ActiveIndexStore = activeIndexStore()
 
 const oss = reactive({
   policy: '',
@@ -90,8 +91,7 @@ const init = {
   quickbars_insert_toolbar: 'quickimage quicktable',
   skin_url: '/skins/ui/oxide',
   content_css: '/skins/content/default/content.css',
-  min_height: 470,
-  max_height: 600,
+  min_height:450,
   image_caption: true,
   images_upload_handler: (blobInfo, progress) =>
       new Promise((resolve, reject) => {
@@ -122,8 +122,8 @@ const init = {
           ElMessage.success("未知错误")
         })
       }),
-  setup: function (editor) {
-    editor.on('KeyDown', function (e) {
+  setup: function (editor: any) {
+    editor.on('KeyDown', function (e: any) {
       if ((e.keyCode == 8 || e.keyCode == 46) && editor.selection) { // delete & backspace keys
         let selectedNode = editor.selection.getNode(); // get the selected node (element) in the editor
         if (selectedNode && selectedNode.nodeName == 'IMG') {
@@ -141,7 +141,7 @@ const deleteFileFromServer = (fileUrl: string) => {
   $http({
     url: `/oss/oss/deleteFile`,
     method: "delete",
-    data: $http.adornData({userName: UserStore.user?.userName, fileUrl: fileUrl}, false, 'form')
+    data: $http.adornData({userName: UserStore.user?.userName, photoUrl: fileUrl}, false, 'json')
   }).then(({data}: { data: any }) => {
     if (data.code !== 200) {
       ElMessage.error(data.message)
@@ -201,6 +201,7 @@ const clearContent = () => {
 
 onMounted(() => {
   tinymce.init({}) // 初始化富文本
+  ActiveIndexStore.activeIndex = '/home/subArticle'
 })
 
 
@@ -208,7 +209,7 @@ onMounted(() => {
 
 <template>
 
-
+  <div class="padding" style="height: 10%"></div>
   <div class="article-container">
     <el-container style="display: flex;flex-direction: column">
       <el-header style="flex: 1">
@@ -228,7 +229,7 @@ onMounted(() => {
       </el-header>
       <el-main>
         <div class="article-content" style="flex: 1;display: flex;flex-direction: column;padding-top: 20px;">
-          <div style="min-height: 400px">
+          <div style="height: auto">
             <Editor id="tinymce"
                     :init="init"
                     v-model="content"></Editor>
@@ -259,12 +260,12 @@ onMounted(() => {
 .article-container {
   height: auto;
   min-height: 500px;
-  width: 50%;
+  width: 90%;
   background-color: #ffffff;
   box-shadow: 2px 2px 30px rgba(0, 0, 0, 0.05);
   align-items: center;
   border-radius: 10px;
-  margin: 10% auto auto;
+  margin: 20px auto;
 }
 
 

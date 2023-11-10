@@ -1,4 +1,5 @@
 import {createRouter, createWebHistory} from 'vue-router'
+import http from '../utils/axios'
 
 
 const routes = [
@@ -35,6 +36,11 @@ const routes = [
                 path: '/home/subArticle',
                 name: 'SubmitArticle',
                 component: () => import("../views/article/submitArticle.vue")
+            },
+            {
+                path:'/home/chat',
+                name:'Chat',
+                component:()=>import('../views/chat/chat.vue')
             }
         ]
     },

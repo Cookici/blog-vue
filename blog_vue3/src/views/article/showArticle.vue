@@ -73,7 +73,7 @@ const updateLike = () => {
       localStorage.setItem(`isLike${blogAndUser.articleId}`, `${UserStore.user?.userId}${blogAndUser.articleId}`)
       color.value = '#ff0000'
       ElMessage.success("点赞成功")
-    }else{
+    } else {
       ElMessage.error("未知错误")
     }
   })
@@ -96,9 +96,8 @@ onMounted(() => {
 </script>
 
 <template>
-
+  <div class="padding" style="height: 10%"></div>
   <div class="article">
-
     <div class="user-left">
       <div class="user-card">
         <font-awesome-icon :icon="['fas', 'user']" style="position: relative;margin-right: auto "/>
@@ -204,7 +203,7 @@ onMounted(() => {
 
 /* 博客文章页面容器 */
 .article {
-  padding-top: 8%;
+  padding-top: 40px;
   height: auto;
   display: flex;
   overflow: auto;

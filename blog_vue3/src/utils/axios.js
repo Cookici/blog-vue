@@ -33,6 +33,7 @@ http.interceptors.response.use(response => {
 }, error => {
     if (error.response.data.code === 401) { // 401, token失效 或 错误token
         localStorage.removeItem('token')
+        localStorage.removeItem('user')
         ElMessage.error("登录过期,请重新登录")
         router.push({path: '/login'})
     }
@@ -65,8 +66,10 @@ http.adornData = (data = {}, openDefaultData = true, contentType = 'json') => {
         't': new Date().getTime()
     }
     data = openDefaultData ? merge(defaults, data) : data
-    console.log(qs.stringify(data))
-    return contentType === 'json' ? JSON.stringify(data) : qs.stringify(data,{arrayFormat: 'repeat'})
+    return contentType === 'json' ? JSON.stringify(data) : qs.stringify(data,{charset:"utf-8",arrayFormat: "repeat"})
 }
+
+
+
 
 export default http

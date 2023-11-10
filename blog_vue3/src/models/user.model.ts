@@ -12,4 +12,5 @@ export interface User {
     userNickname: string;
     userLevel: string;
     userAuthority: string;
+    userStatus: string
 }

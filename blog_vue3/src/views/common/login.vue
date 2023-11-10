@@ -49,14 +49,16 @@ const login = () => {
   })
 }
 
+
 const getUser = () => {
   $http({
     url: `identify/blog/identify/get/${form.username}`,
     method: "get",
-  }).then(({data}: { data: any }) => {
+  }).then(async ({data}: { data: any }) => {
+    console.log(data.data)
     UserStore.setUser(data.data as User)
-    router.push({path: '/home/content'}).then(()=>{
-      nextTick(()=>{
+    router.push({path: '/home/content'}).then(() => {
+      nextTick(() => {
         window.location.reload()
       })
     })
@@ -82,8 +84,6 @@ const toRegister = () => {
 }
 
 
-
-
 onMounted(() => {
   getCode()
 })
@@ -100,10 +100,12 @@ onMounted(() => {
         <el-input type="text" v-model="form.username" placeholder="登录账号" autocomplete="off"></el-input>
       </el-form-item>
       <el-form-item label="密码">
-        <el-input type="password" v-model="form.password" placeholder="登录密码" autocomplete="off" show-password></el-input>
+        <el-input type="password" v-model="form.password" placeholder="登录密码" autocomplete="off"
+                  show-password></el-input>
       </el-form-item>
       <el-form-item label="验证码">
-        <el-input type="text" v-model="form.code" placeholder="验证码" autocomplete="off"  @keyup.enter="login()" ></el-input>
+        <el-input type="text" v-model="form.code" placeholder="验证码" autocomplete="off"
+                  @keyup.enter="login()"></el-input>
       </el-form-item>
     </el-form>
     <div>
@@ -122,8 +124,12 @@ onMounted(() => {
       </div>
       <div style="text-align: center;margin: 30px 10px 10px;">
         <el-row>
-          <el-col :span="12"> <el-button type="primary" @click="login()" style="width: 60%">登录</el-button></el-col>
-          <el-col :span="12"><el-button type="primary" @click="toRegister()" style="width: 60%">注册</el-button></el-col>
+          <el-col :span="12">
+            <el-button type="primary" @click="login()" style="width: 60%">登录</el-button>
+          </el-col>
+          <el-col :span="12">
+            <el-button type="primary" @click="toRegister()" style="width: 60%">注册</el-button>
+          </el-col>
         </el-row>
       </div>
       <el-row style="margin: 20px 0 0;">

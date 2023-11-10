@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import {getCurrentInstance, ref} from 'vue'
+import {getCurrentInstance, onMounted, reactive, ref} from 'vue'
 import {User} from "../models/user.model.ts";
 import {ElMessage} from "element-plus";
-import {tokenStore} from "../stores/token.ts";
 import {useRouter} from "vue-router";
 import {userStore} from "../stores/user.ts";
+import {activeIndexStore} from "../stores/activeIndex.ts";
 import Cropper from "../components/upload/cropper.vue";
+import SocketService from "../utils/websocket.js";
 
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
-const TokenStore = tokenStore()
 const UserStore = userStore()
 const router = useRouter()
+const ActiveIndexStore = activeIndexStore()
 
-let activeIndex = ref('/home/content')
 let keyword = ref('')
 let dialogVisible = ref(false)
 
@@ -23,6 +23,10 @@ const search = () => {
   }
 }
 
+const state = reactive({
+  socketServe: SocketService.Instance,
+})
+
 
 const logout = () => {
   $http({
@@ -31,13 +35,15 @@ const logout = () => {
   }).then((data: {
     data: any
   }) => {
-    let getToken = data.headers['authorization']
-    TokenStore.setToken(getToken)
-    UserStore.setUser(null)
-    router.replace({path: '/login'})
+    SocketService.Instance.register(0)
+    localStorage.clear()
+    router.replace({path: '/login'}).then(() => {
+      window.location.reload()
+    })
     ElMessage.success(data.data.data)
   })
 }
+
 
 const canPointer = ref('none')
 
@@ -53,6 +59,15 @@ const seeDetail = () => {
 
 let user: User = JSON.parse(localStorage.getItem('user') as any).user
 
+const init = () => {
+  SocketService.Instance.connect();
+  state.socketServe = SocketService.Instance;
+}
+
+onMounted(()=>{
+  init()
+  state.socketServe.register(1)
+})
 
 </script>
 
@@ -69,7 +84,7 @@ let user: User = JSON.parse(localStorage.getItem('user') as any).user
               <el-dropdown-menu>
                 <el-dropdown-item @click="open">修改头像</el-dropdown-item>
                 <el-dropdown-item @click="seeDetail">历史头像</el-dropdown-item>
-                <el-dropdown-item @click="logout">退出</el-dropdown-item>
+                <el-dropdown-item @click="logout()">退出</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -107,7 +122,7 @@ let user: User = JSON.parse(localStorage.getItem('user') as any).user
       <el-col :span="8" style="height: 100%">
         <div class="nav">
           <el-menu
-              :default-active="activeIndex"
+              :default-active="ActiveIndexStore.activeIndex"
               class="el-menu-demo"
               mode="horizontal"
               :ellipsis="false"
@@ -116,14 +131,14 @@ let user: User = JSON.parse(localStorage.getItem('user') as any).user
             <div class="flex-grow"/>
             <el-menu-item index="/home/content">博客主页</el-menu-item>
             <el-menu-item index="/home/subArticle">发表博客</el-menu-item>
-            <el-menu-item index="2">个人中心</el-menu-item>
-            <el-menu-item index="3">好友列表</el-menu-item>
+            <el-menu-item index="3">个人中心</el-menu-item>
+            <el-menu-item index="/home/chat">聊天室</el-menu-item>
           </el-menu>
         </div>
       </el-col>
     </div>
 
-      <router-view :key="$route.fullPath"></router-view>
+    <router-view :key="$route.fullPath"></router-view>
 
   </div>
 
@@ -133,6 +148,7 @@ let user: User = JSON.parse(localStorage.getItem('user') as any).user
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%)" :style="{pointerEvents:canPointer}">
+    <div style="padding-top:1.5%"></div>
     <Cropper v-model:canPointer="canPointer" v-model:dialogVisible="dialogVisible"
              v-if="dialogVisible"
              style="height: 100%;width: 100%"

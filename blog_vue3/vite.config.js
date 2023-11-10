@@ -23,6 +23,11 @@ export default defineConfig({
                 target: "http://localhost:9000", //跨域地址
                 changeOrigin: true, //支持跨域
                 rewrite: (path) => path.replace(/^\/article/, '')   //重写路径
+            },
+            '/chat':{
+                target: "http://localhost:11000", //跨域地址
+                changeOrigin: true, //支持跨域
+                rewrite: (path) => path.replace(/^\/chat/, '')   //重写路径
             }
         }
     },

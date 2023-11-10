@@ -1,4 +1,5 @@
 <template>
+  <div style="height: 10%"></div>
   <div class="card-container">
     <div class="card-position">
       <el-card class="box-card">
@@ -50,7 +51,7 @@ const loveBack = (userId, photo) => {
     $http({
       url: `/identify/blog/identify/goBackPhoto`,
       method: 'put',
-      data: $http.adornData({userId: userId, photo: photo.photo}, false, 'form')
+      data: $http.adornData({id: userId, photoUrl: photo.photo}, false, 'json')
     }).then(({data}: { data: any }) => {
       if (data.data === 1) {
         $http({
@@ -78,6 +79,8 @@ const loveBack = (userId, photo) => {
 <style>
 
 .card-container {
+  padding-top: 20px;
+  padding-bottom:20px ;
   display: flex;
   height: auto;
   width: 100%;
@@ -88,7 +91,6 @@ const loveBack = (userId, photo) => {
 }
 
 .card-position {
-  margin-top: 8%;
   overflow: hidden;
   border-radius:20px;
   border: #96969b solid 0.01rem;

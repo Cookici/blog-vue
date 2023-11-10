@@ -253,7 +253,7 @@ const updatePhoto = () => {
   $http({
     url: '/identify/blog/identify/updateUserPhoto',
     method: 'put',
-    data: $http.adornData({id: UserStore.user?.userId, photoUrl: uploadPhotoUrl.value}, false, 'form')
+    data: $http.adornData({id: UserStore.user?.userId, photoUrl: uploadPhotoUrl.value}, false, 'json')
   }).then(({data}: { data: any }) => {
     if (data.data === 1) {
       (UserStore.user as User).userProfilePhoto = uploadPhotoUrl.value
