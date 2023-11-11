@@ -24,18 +24,10 @@ const handleCurrentChange = (val: number) => {
 
 const articleDetail = (blog: Blog) => {
   blog = toRaw(blog)
-  upDateView(blog.articleId)
   router.push({path: '/home/content/showArticle', query: {id: blog.articleId}, state: {blog}})
 }
 
-const upDateView = (articleId: number) => {
-  $http({
-    url: `/article/blog/articles/addView/${articleId}`,
-    method: "post",
-  }).then(({data}: { data: any }) => {
-    console.log(data.data)
-  })
-}
+
 
 const getPage = () => {
   $http({

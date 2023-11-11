@@ -1,198 +1,237 @@
+export {
+    socket
+}
+
+
 import {ElMessage} from "element-plus";
-import {userStore} from "../stores/user";
 
-const UserStore = userStore()
-export default class SocketService {
-
-    static instance = null;
-
-    static get Instance() {
-        if (!this.instance) {
-            this.instance = new SocketService()
-        }
-        return this.instance
-    }
-
-
-    ws = null;
-
+// socket主要对象
+let socket = {
+    ws: null,
+    /**
+     * 这个是我们的ws的地址
+     * */
+    url: "ws://localhost:10001",
     /**
      * 开启标识
      * */
-    connected = false;
-
+    socket_open: false,
     /**
      * 心跳timer
      * */
-    heartbeat_timer = null;
-
+    heartbeat_timer: null,
     /**
      * 心跳发送频率
      * */
-    heartbeat_interval = 5000;
-
+    heartbeat_interval: 1000 * 20,
     /**
      * 是否开启重连
      * */
-    is_reconnect = true;
-
+    is_reconnect: true,
     /**
      * 重新连接的次数
      * */
-    reconnect_count = 20;
-
+    reconnect_count: 3,
     /**
-     * 当前重新连接的次数，默认为：0
+     * 当前重新连接的次数，默认为：1
      * */
-    reconnect_current = 0;
-
+    reconnect_current: 1,
     /**
      * 重新连接的时间类型
      * */
-    reconnect_timer = null;
-
+    reconnect_timer: null,
     /**
      * 重新连接的间隔
      * */
-    reconnect_interval = 1000;
+    reconnect_interval: 3000,
 
-    connect() {
-        if (!window.WebSocket) {
-            ElMessage.error('你的浏览器不支持WebSocket');
+    /**
+     * 初始化连接
+     */
+    init: () => {
+        if (!("WebSocket" in window)) {
+            ElMessage({
+                message: '当前浏览器与网站不兼容',
+                type: 'error',
+            });
             return null
         }
 
-        if (this.ws !== null) {
-            return this.ws
+        // 已经创建过连接不再重复创建
+        if (socket.ws) {
+            return socket.ws
         }
 
+        socket.ws = new WebSocket(socket.url)
 
-        let url = 'ws://localhost:10001';
-        this.ws = new WebSocket(url);
+        socket.ws.onclose = function () {
+            clearInterval(socket.heartbeat_timer)
+            socket.socket_open = false
 
-        this.ws.onopen = () => {
-            ElMessage.success("欢迎回来");
-            this.reconnect_current = 0
-            this.connected = true
-            this.is_reconnect = true
-            this.heartbeat()
-        }
-
-
-        this.ws.onclose = () => {
-            ElMessage.error('连接已断开');
-            clearInterval(this.heartbeat_interval)
-            this.connected = false;
-            if (this.is_reconnect === true) {
-                this.reconnect_timer = setTimeout(() => {
-                    if (this.reconnect_current > this.reconnect_count) {
-                        clearTimeout(this.reconnect_timer)
+            if (socket.is_reconnect) {
+                socket.reconnect_timer = setTimeout(() => {
+                    if (socket.reconnect_current > socket.reconnect_count) {
+                        clearTimeout(socket.reconnect_timer)
                         return
                     }
-                    this.reconnect_current++
-                    this.reconnect()
-                }, this.reconnect_interval)
+                    socket.reconnect()
+                }, socket.reconnect_interval)
             }
         }
 
-    }
 
+        socket.ws.onopen = function () {
+            console.log('连接成功')
+            socket.socket_open = true
+            socket.is_reconnect = true
+            socket.heartbeat()
+        }
+
+
+        socket.ws.onerror = function (err) {
+            ElMessage({
+                message: '服务连接发送错误',
+                type: 'error',
+            });
+        }
+
+        socket.ws.onmessage = function (msg) {
+            const res = JSON.parse(msg.data);
+            if (res.type === 9) {
+                console.log("注册从服务端获取到了数据 ==> ", res)
+                ElMessage.success(`${res.params.message}`)
+            } else if (res.type === 10) {
+                console.log(res.params.message)
+            }
+        }
+    },
     /**
      * 获取websocket对象
      * */
-    getSocket() {
-        if (this.ws) {
-            return this.ws
-        } else {
-            this.connect()
-        }
-    }
 
-    getStatus() {
-        if (this.ws.readyState === 0) {
+    getSocket: () => {
+        if (socket.ws) {
+            return socket.ws
+        } else {
+            socket.init();
+        }
+    },
+
+    getStatus: () => {
+        if (socket.ws.readyState === 0) {
             return "未连接";
-        } else if (this.ws.readyState === 1) {
+        } else if (socket.ws.readyState === 1) {
             return "已连接";
-        } else if (this.ws.readyState === 2) {
+        } else if (socket.ws.readyState === 2) {
             return "连接正在关闭";
-        } else if (this.ws.readyState === 3) {
+        } else if (socket.ws.readyState === 3) {
             return "连接已关闭";
         }
-    }
+    },
 
-
-    register(status){
-        let data = {
-            type: 1,
-            params: {
-                userId: UserStore.user?.userId,
-                userName: UserStore.user?.userName,
-                loginStatus: status
-            }
-        }
-        console.log(data)
-        this.send(data)
-        console.log("发送注册数据")
-    }
-
-
-    // 发送数据的方法
-    send(data, callback = null) {
-        // 判断此时此刻有没有连接成功
-        if (this.connected) {
-            this.reconnect_current = 0;
+    /**
+     * 发送消息
+     * @param {*} data 发送数据
+     * @param {*} callback 发送后的自定义回调函数
+     */
+    send: (data, callback = null) => {
+        // 开启状态直接发送
+        if (socket.ws.readyState === socket.ws.OPEN) {
             try {
-                this.ws.send(JSON.stringify(data));
+                socket.ws.send(JSON.stringify(data))
             } catch (e) {
-                this.ws.send(data);
+                socket.ws.send(data);
             }
             if (callback) {
                 callback()
             }
+            // 正在开启状态，则等待1s后重新调用
+        } else if (socket.ws.readyState === socket.ws.CONNECTING) {
+            setTimeout(function () {
+                socket.send(data, callback)
+            }, 1000)
         } else {
-            this.connect()
-            setTimeout(() => {
-                this.send(data);
-            }, 1000);
+            socket.init()
+            setTimeout(function () {
+                socket.send(data, callback)
+            }, 1000)
         }
-    }
+    },
 
-    heartbeat() {
-        if (this.heartbeat_timer) {
-            clearInterval(this.heartbeat_timer)
+
+    /**
+     * 心跳
+     */
+    heartbeat: () => {
+
+        if (socket.heartbeat_timer) {
+            clearInterval(socket.heartbeat_timer)
         }
 
-        this.heartbeat_timer = setInterval(() => {
+        socket.heartbeat_timer = setInterval(() => {
             let data = {
                 type: 6,
                 params: {
-                    userId: UserStore.user?.userId,
+                    userId: JSON.parse(localStorage.getItem('user')).user.userId,
                     message: "ping",
                 }
             }
-            this.send(data)
-        }, this.heartbeat_interval)
-    }
+            socket.send(data)
+        }, socket.heartbeat_interval)
+    },
 
     /**
-     * 主动关闭
+     * 主动关闭连接
      */
-    close() {
-        clearInterval(this.heartbeat_interval)
-        this.is_reconnect = false
-        this.ws.close()
-    }
+    close: () => {
+        console.log('主动断开连接')
+        clearInterval(socket.heartbeat_timer)
+        socket.is_reonnect = false
+        socket.ws.close()
+    },
 
     /**
      * 重新连接
      */
-    reconnect() {
-        console.log('发起重新连接', this.reconnect_current)
-        if (this.ws && this.connect()) {
-            this.ws.close()
+    reconnect: () => {
+        socket.reconnect_current++
+        console.log('发起重新连接', socket.reconnect_current)
+
+        if (socket.ws && socket.socket_open) {
+            socket.ws.close()
         }
-        this.connect()
+        window.location.reload()
+        socket.init()
+    },
+
+
+    /**
+     * 注册
+     * @param status
+     */
+    register: (status) => {
+        let data = {
+            type: 1,
+            params: {
+                userId: JSON.parse(localStorage.getItem('user')).user.userId,
+                userName: JSON.parse(localStorage.getItem('user')).user.userName,
+                loginStatus: status
+            }
+        }
+        socket.send(data)
+        console.log("发出注册请求")
     }
 
-
 }
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {getCurrentInstance, onMounted, reactive, ref} from 'vue'
+import {getCurrentInstance, onMounted, ref} from 'vue'
 import {User} from "../models/user.model.ts";
 import {ElMessage} from "element-plus";
 import {useRouter} from "vue-router";
 import {userStore} from "../stores/user.ts";
 import {activeIndexStore} from "../stores/activeIndex.ts";
 import Cropper from "../components/upload/cropper.vue";
-import SocketService from "../utils/websocket.js";
+import {socket} from "../utils/websocket.js";
 
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
@@ -23,10 +23,6 @@ const search = () => {
   }
 }
 
-const state = reactive({
-  socketServe: SocketService.Instance,
-})
-
 
 const logout = () => {
   $http({
@@ -35,7 +31,7 @@ const logout = () => {
   }).then((data: {
     data: any
   }) => {
-    SocketService.Instance.register(0)
+    socket.register(0)
     localStorage.clear()
     router.replace({path: '/login'}).then(() => {
       window.location.reload()
@@ -59,14 +55,12 @@ const seeDetail = () => {
 
 let user: User = JSON.parse(localStorage.getItem('user') as any).user
 
-const init = () => {
-  SocketService.Instance.connect();
-  state.socketServe = SocketService.Instance;
-}
 
-onMounted(()=>{
-  init()
-  state.socketServe.register(1)
+
+
+onMounted(() => {
+  socket.init()
+  socket.register(1)
 })
 
 </script>

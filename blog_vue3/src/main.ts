@@ -5,7 +5,6 @@ import {fas} from '@fortawesome/free-solid-svg-icons'
 import {far} from '@fortawesome/free-regular-svg-icons'
 import {fab} from '@fortawesome/free-brands-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
-import {QuillEditor} from "@vueup/vue-quill";
 import App from './App.vue'
 import router from "./router/index.js";
 import ElementPlus from 'element-plus'
@@ -14,7 +13,6 @@ import VueCropper from 'vue-cropper';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import piniaPersist from 'pinia-plugin-persist'
 import 'vue-cropper/dist/index.css'
-import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import 'element-plus/dist/index.css'
 
 
@@ -32,7 +30,8 @@ app.use(router)
     .use(pinia)
     .use(VueCropper)
     .component('font-awesome-icon', FontAwesomeIcon)
-    .component('QuillEditor', QuillEditor)
+
+
 
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {

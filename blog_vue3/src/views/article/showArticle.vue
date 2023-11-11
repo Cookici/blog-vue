@@ -88,9 +88,19 @@ const judgeLike = () => {
   }
 }
 
+const upDateView = () => {
+  $http({
+    url: `/article/blog/articles/addView/${blogAndUser.articleId}`,
+    method: "post",
+  }).then(({data}: { data: any }) => {
+    console.log(data.data)
+  })
+}
+
 onMounted(() => {
   getUserDetail();
   judgeLike()
+  upDateView()
 })
 
 </script>

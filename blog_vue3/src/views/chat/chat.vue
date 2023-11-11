@@ -3,10 +3,9 @@ import {onMounted, reactive, ref, getCurrentInstance} from "vue";
 import {activeIndexStore} from "../../stores/activeIndex";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {userStore} from "../../stores/user.ts";
-import {Message} from "../../models/message.model.ts";
 import {User} from "../../models/user.model.ts";
+import {socket} from "../../utils/websocket.js";
 import qs from "qs";
-import SocketService from "../../utils/websocket.js";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 
@@ -20,15 +19,7 @@ const friendApplySize = ref(0)
 
 let friendApplyList: User[] = reactive([])
 
-
-const state = reactive({
-  socketServe: SocketService.Instance,
-})
 const toSearch = () => {
-  if (searchId.value === UserStore.user?.userName) {
-    ElMessage.warning("不能添加自己")
-    return;
-  }
   $http({
     url: `/identify/blog/identify/getByUserName/${searchId.value}`,
     method: 'get',
@@ -43,6 +34,24 @@ const toSearch = () => {
       }).catch(() => {
         ElMessage.success('已取消添加')
       })
+    }
+  })
+}
+
+const judgeHaven = () => {
+  if (searchId.value === UserStore.user?.userName) {
+    ElMessage.warning("不能添加自己")
+    return;
+  }
+  $http({
+    url: `/chat/blog/chat/${UserStore.user?.userId}/${searchId.value}`,
+    method: 'get',
+  }).then(({data}) => {
+    console.log(data)
+    if (data.data == 0) {
+      toSearch()
+    } else {
+      ElMessage.warning("已经添加过该好友")
     }
   })
 }
@@ -63,7 +72,10 @@ const getApply = () => {
     friendApplySize.value = data.data.applySize
     if (friendApplySize.value !== 0) {
       $http({
-        url: `/identify/blog/identify/getByIds?${qs.stringify({ids: Object.keys(data.data.apply)}, {charset: "utf-8", arrayFormat: "repeat"})}`,
+        url: `/identify/blog/identify/getByIds?${qs.stringify({ids: Object.keys(data.data.apply)}, {
+          charset: "utf-8",
+          arrayFormat: "repeat"
+        })}`,
         method: 'get',
       }).then(({data}: any) => {
         friendApplyList = data.data
@@ -72,26 +84,46 @@ const getApply = () => {
   })
 }
 
-const agree = (userId, friendId) => {
+const agree = (userId: number, friendId: number) => {
   ElMessageBox.confirm("是否添加该好友?", "提示", {}).then(() => {
     $http({
       url: "/chat/blog/chat/agree",
       method: 'post',
       data: $http.adornData({userId: userId, friendId: friendId}, false, 'json')
     }).then(({data}: any) => {
-      if (data === 2) {
+      console.log(data)
+      if (data.data === 2) {
         ElMessage.success("添加成功")
+        setTimeout(()=>{
+          window.location.reload()
+        },200)
       }
     })
   }).catch(() => {
-    ElMessage.error("取消成功")
+    ElMessage.success("取消添加成功")
+  })
+}
+
+const reject = (userId: number, friendId: number) => {
+  ElMessageBox.confirm("是否确定拒绝","提示",{}).then(()=>{
+    $http({
+      url: "/chat/blog/chat/reject",
+      method: 'put',
+      data: $http.adornData({userId: userId, friendId: friendId}, false, 'json')
+    }).then(({data}) => {
+      if (data.code == 200) {
+        ElMessage.success("删除成功")
+        setTimeout(()=>{
+          window.location.reload()
+        },200)
+      }
+    })
+  }).catch(()=>{
+    ElMessage.success("取消拒绝成功")
   })
 
 }
 
-const reject = () => {
-
-}
 
 const wsAddFriend = (userId: any) => {
   let data = {
@@ -100,31 +132,13 @@ const wsAddFriend = (userId: any) => {
       toMessageId: userId,
     }
   }
-  SocketService.Instance.send(data)
+  socket.send(data)
 }
 
-
-const wsReturnMessage = () => {
-  state.socketServe.ws.onmessage = (msg: any) => {
-    const res: Message = JSON.parse(msg.data);
-    if (res.type === 9) {
-      console.log("注册从服务端获取到了数据 ==> ", res)
-      ElMessage.success(`${res.params.message}`)
-    } else if (res.type === 10) {
-      console.log(res.params.message)
-    }
-  }
-}
-
-const init = () => {
-  SocketService.Instance.connect();
-  state.socketServe = SocketService.Instance;
-}
 
 onMounted(() => {
-  init()
+  socket.init()
   ActiveIndexStore.activeIndex = '/home/chat'
-  wsReturnMessage()
   getApply()
 })
 
@@ -193,10 +207,11 @@ onMounted(() => {
                 </div>
                 <div class="option">
                   <el-button size="small" style="margin-right: 70px;margin-top: 4px" type="primary"
-                             @click="agree(UserStore.user?.userId,apply.userId)">
+                             @click="agree(UserStore.user?.userId ,apply.userId)">
                     同意
                   </el-button>
-                  <el-button size="small" style="margin-left: 70px;margin-top: 4px" type="danger" @click="reject">拒绝
+                  <el-button size="small" style="margin-left: 70px;margin-top: 4px" type="danger"
+                             @click="reject(UserStore.user?.userId ,apply.userId)">拒绝
                   </el-button>
                 </div>
               </div>
@@ -209,7 +224,7 @@ onMounted(() => {
       <el-container style="height: auto;min-height: 100%">
         <el-header style="padding: 10px">
           <el-input style="width: 80%" v-model="searchId" placeholder="Please input"/>
-          <el-button style="margin-left: 7%" type="primary" @click="toSearch">添加</el-button>
+          <el-button style="margin-left: 7%" type="primary" @click="judgeHaven">添加</el-button>
         </el-header>
         <el-main>Main</el-main>
       </el-container>
