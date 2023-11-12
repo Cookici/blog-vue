@@ -5,19 +5,26 @@ import {ElMessage, ElMessageBox} from "element-plus";
 import {userStore} from "../../stores/user.ts";
 import {User} from "../../models/user.model.ts";
 import {socket} from "../../utils/websocket.js";
+import {useRouter} from "vue-router";
+import {singleMessage} from "../../stores/singleMessage.ts";
 import qs from "qs";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 
 const ActiveIndexStore = activeIndexStore()
 const UserStore = userStore()
-
+const router = useRouter()
+const SingleMessage = singleMessage()
 
 let searchId = ref('')
 
 const friendApplySize = ref(0)
 
 let friendApplyList: User[] = reactive([])
+
+let friendList: User[] = reactive([])
+
+const friendListSize = ref(0)
 
 const toSearch = () => {
   $http({
@@ -46,7 +53,7 @@ const judgeHaven = () => {
   $http({
     url: `/chat/blog/chat/${UserStore.user?.userId}/${searchId.value}`,
     method: 'get',
-  }).then(({data}) => {
+  }).then(({data}: any) => {
     console.log(data)
     if (data.data == 0) {
       toSearch()
@@ -94,9 +101,9 @@ const agree = (userId: number, friendId: number) => {
       console.log(data)
       if (data.data === 2) {
         ElMessage.success("添加成功")
-        setTimeout(()=>{
+        setTimeout(() => {
           window.location.reload()
-        },200)
+        }, 200)
       }
     })
   }).catch(() => {
@@ -105,23 +112,29 @@ const agree = (userId: number, friendId: number) => {
 }
 
 const reject = (userId: number, friendId: number) => {
-  ElMessageBox.confirm("是否确定拒绝","提示",{}).then(()=>{
+  ElMessageBox.confirm("是否确定拒绝", "提示", {}).then(() => {
     $http({
       url: "/chat/blog/chat/reject",
       method: 'put',
       data: $http.adornData({userId: userId, friendId: friendId}, false, 'json')
-    }).then(({data}) => {
+    }).then(({data}: any) => {
       if (data.code == 200) {
         ElMessage.success("删除成功")
-        setTimeout(()=>{
+        setTimeout(() => {
           window.location.reload()
-        },200)
+        }, 200)
       }
     })
-  }).catch(()=>{
+  }).catch(() => {
     ElMessage.success("取消拒绝成功")
   })
 
+}
+
+const goSingleChat = (friend: any) => {
+  SingleMessage.receiveMessage = []
+  SingleMessage.friendId = ''
+  router.push({path: '/home/chat/single', query: {friendId: friend.userId}, state: {friend}})
 }
 
 
@@ -135,11 +148,22 @@ const wsAddFriend = (userId: any) => {
   socket.send(data)
 }
 
+const getFriends = () => {
+  $http({
+    url: `/chat/blog/chat/friendList/${UserStore.user?.userId}`,
+    method: 'get'
+  }).then(({data}: any) => {
+    friendList = data.data
+    friendListSize.value = friendList.length
+  })
+}
+
 
 onMounted(() => {
   socket.init()
   ActiveIndexStore.activeIndex = '/home/chat'
   getApply()
+  getFriends()
 })
 
 </script>
@@ -166,7 +190,27 @@ onMounted(() => {
                 <location/>
               </el-icon>
               <span>我的好友</span>
+              <font-awesome-icon :icon="['far', 'user']" style="margin-left: 51.2%"/>
+              &nbsp;&nbsp;<span style="color: black">{{ friendListSize }}</span>
             </template>
+            <el-menu-item @click="goSingleChat(friend)"
+                          v-for="friend in friendList" :key="friend.userId" style="height: 150px">
+              <div class="friend-box">
+                <div class="friend-userInfo">
+                  <el-row>
+                    <el-col :span="12" style="padding: 10px">
+                      <el-image class="friend-img" :src="friend.userProfilePhoto"></el-image>
+                    </el-col>
+                    <el-col :span="12" style="text-align: center;display: flex;flex-direction: column">
+                      <div class="friend-message" style="margin: auto">
+                        <span style="font-weight: bolder">昵称：{{ friend.userNickname }}</span><br>
+                        <span style="font-weight: 100">{{ friend.userName }}</span>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </div>
+            </el-menu-item>
           </el-sub-menu>
 
 
@@ -186,7 +230,7 @@ onMounted(() => {
                 <location/>
               </el-icon>
               <span>好友申请</span>
-              <font-awesome-icon style="margin-left: 50%" :icon="['far', 'message']"/>&nbsp;&nbsp;<span
+              <font-awesome-icon style="margin-left: 50%;color: red" :icon="['far', 'message']"/>&nbsp;&nbsp;<span
                 style="color: red">{{ friendApplySize }}</span>
             </template>
             <el-menu-item v-for="apply in friendApplyList" :key="apply.userId" style="height: 150px">
@@ -207,11 +251,11 @@ onMounted(() => {
                 </div>
                 <div class="option">
                   <el-button size="small" style="margin-right: 70px;margin-top: 4px" type="primary"
-                             @click="agree(UserStore.user?.userId ,apply.userId)">
+                             @click="agree(UserStore.user?.userId as any ,apply.userId as any)">
                     同意
                   </el-button>
                   <el-button size="small" style="margin-left: 70px;margin-top: 4px" type="danger"
-                             @click="reject(UserStore.user?.userId ,apply.userId)">拒绝
+                             @click="reject(UserStore.user?.userId  as any,apply.userId  as any)">拒绝
                   </el-button>
                 </div>
               </div>
@@ -223,10 +267,14 @@ onMounted(() => {
       </el-aside>
       <el-container style="height: auto;min-height: 100%">
         <el-header style="padding: 10px">
-          <el-input style="width: 80%" v-model="searchId" placeholder="Please input"/>
-          <el-button style="margin-left: 7%" type="primary" @click="judgeHaven">添加</el-button>
+          <div style="text-align: center;align-items: center">
+            <el-input style="width: 80%" v-model="searchId" placeholder="输入账号..."/>
+            <el-button style="margin-left: 6%" type="primary" @click="judgeHaven">添加</el-button>
+          </div>
         </el-header>
-        <el-main>Main</el-main>
+        <el-main style="padding: 0;margin: 0">
+          <router-view :key="$route.fullPath"></router-view>
+        </el-main>
       </el-container>
     </el-container>
   </div>
@@ -239,15 +287,12 @@ onMounted(() => {
 }
 
 .el-aside {
-  border: black solid 1px;
+  border: #bbb0b0 solid 1px;
 }
 
 .el-header {
-  border: black solid 1px;
-}
-
-.el-main {
-  border: black solid 1px;
+  border-top: #bbb0b0 solid 1px;
+  border-bottom: #bbb0b0 solid 1px;
 }
 
 .parent-container {
@@ -257,7 +302,7 @@ onMounted(() => {
 }
 
 .el-menu-item {
-  border: black solid 1px;
+
 }
 
 .apply-box {

@@ -14,6 +14,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import piniaPersist from 'pinia-plugin-persist'
 import 'vue-cropper/dist/index.css'
 import 'element-plus/dist/index.css'
+import "v3-scroll/dist/library.mjs.css";
 
 
 library.add(fas, far, fab)

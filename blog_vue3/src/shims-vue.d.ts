@@ -4,3 +4,4 @@ declare module '*.vue' {
     export default Vue
 }
 declare module 'pinia-plugin-persist';
+declare module "element-plus";

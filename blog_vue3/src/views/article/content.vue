@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
-import {getCurrentInstance, onMounted, reactive, Ref, ref, toRaw} from "vue";
+import {getCurrentInstance, onMounted, Ref, ref, toRaw} from "vue";
 import {useRouter} from "vue-router";
 import {Blog} from "../../models/blog.model.ts";
 import {pageStore} from "../../stores/page.ts";
-import SocketService from '../../utils/websocket.js'
 import {userStore} from "../../stores/user.ts";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 const router = useRouter()
 const PageStore = pageStore()
-const UserStore = userStore()
 
 let total = ref(0)
 let pageAll = ref(0)

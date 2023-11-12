@@ -6,6 +6,7 @@
     "dev": "vite"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.1.0",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
     "@fortawesome/free-brands-svg-icons": "^6.4.2",
     "@fortawesome/free-regular-svg-icons": "^6.4.2",
@@ -14,20 +15,21 @@
     "@tinymce/tinymce-vue": "^5.1.1",
     "@vueup/vue-quill": "^1.2.0",
     "axios": "^1.5.1",
+    "better-scroll": "^2.5.1",
     "element-plus": "^2.4.1",
     "lodash": "^4.17.21",
     "pinia": "^2.1.7",
     "pinia-plugin-persist": "^1.0.0",
     "qs": "^6.11.2",
-    "quill-blot-formatter": "^1.0.5",
-    "quill-emoji": "^0.2.0",
-    "quill-image-drop-module": "^1.0.3",
     "sass": "^1.69.5",
+    "tinymce": "^6.7.2",
     "typescript": "^5.2.2",
     "uuid": "^9.0.1",
+    "v3-scroll": "^1.0.4",
     "vue": "^3.3.6",
     "vue-cropper": "^1.1.1",
-    "vue-router": "^4.0.0"
+    "vue-router": "^4.0.0",
+    "vue3-emoji": "^2.0.0"
   },
   "devDependencies": {
     "@types/uuid": "^9.0.6",

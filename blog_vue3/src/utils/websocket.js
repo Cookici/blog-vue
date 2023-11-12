@@ -5,6 +5,7 @@ export {
 
 import {ElMessage} from "element-plus";
 
+
 // socket主要对象
 let socket = {
     ws: null,
@@ -93,16 +94,6 @@ let socket = {
                 message: '服务连接发送错误',
                 type: 'error',
             });
-        }
-
-        socket.ws.onmessage = function (msg) {
-            const res = JSON.parse(msg.data);
-            if (res.type === 9) {
-                console.log("注册从服务端获取到了数据 ==> ", res)
-                ElMessage.success(`${res.params.message}`)
-            } else if (res.type === 10) {
-                console.log(res.params.message)
-            }
         }
     },
     /**

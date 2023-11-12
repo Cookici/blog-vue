@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import {getCurrentInstance, onMounted, ref} from 'vue'
 import {User} from "../models/user.model.ts";
-import {ElMessage} from "element-plus";
+import {ElMessage, ElNotification} from "element-plus";
 import {useRouter} from "vue-router";
 import {userStore} from "../stores/user.ts";
 import {activeIndexStore} from "../stores/activeIndex.ts";
 import Cropper from "../components/upload/cropper.vue";
 import {socket} from "../utils/websocket.js";
+import {singleMessage} from "../stores/singleMessage.ts";
 
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 const UserStore = userStore()
 const router = useRouter()
 const ActiveIndexStore = activeIndexStore()
+const SingleMessage = singleMessage()
 
 let keyword = ref('')
 let dialogVisible = ref(false)
@@ -55,12 +57,38 @@ const seeDetail = () => {
 
 let user: User = JSON.parse(localStorage.getItem('user') as any).user
 
+const messageFromWebSocket = () => {
+  socket.ws.onmessage = function (msg: any) {
+    const res = JSON.parse(msg.data);
+    if (res.type === 9) {       //注册
+      console.log("注册从服务端获取到了数据 ==> ", res)
+      ElMessage.success(`${res.params.message}`)
+    } else if (res.type === 10) {   //心跳
+      console.log(res.params.message)
+    } else if (res.type === 5) {
+      if (Number(res.params.toUser.userId) === Number(UserStore.user?.userId)) {
+        ElNotification({
+          title: "提示",
+          message: `你有${res.params.fromUser.userName}的新消息`,
+          type: "success",
+        })
+      }
 
+      if (
+          (Number(res.params.toUser.userId) === Number(UserStore.user?.userId) && Number(res.params.fromUser.userId) === Number(SingleMessage.friendId))
+          || (Number(res.params.fromUser.userId) === Number(UserStore.user?.userId) && Number(res.params.toUser.userId) === Number(SingleMessage.friendId))
+      ) {
+        SingleMessage.receiveMessage.push(res.params)
+      }
+    }
+  }
+}
 
 
 onMounted(() => {
   socket.init()
   socket.register(1)
+  messageFromWebSocket()
 })
 
 </script>

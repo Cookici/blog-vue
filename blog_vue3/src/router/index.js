@@ -38,9 +38,16 @@ const routes = [
                 component: () => import("../views/article/submitArticle.vue")
             },
             {
-                path:'/home/chat',
-                name:'Chat',
-                component:()=>import('../views/chat/chat.vue')
+                path: '/home/chat',
+                name: 'Chat',
+                component: () => import('../views/chat/chat.vue'),
+                children: [
+                    {
+                        path: '/home/chat/single',
+                        name: 'Single',
+                        component: () => import('../views/chat/single.vue')
+                    }
+                ]
             }
         ]
     },
