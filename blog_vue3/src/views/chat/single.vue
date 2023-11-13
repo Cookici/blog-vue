@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 
-import {getCurrentInstance, onBeforeMount, onMounted, reactive, ref} from "vue";
+import {getCurrentInstance, onMounted, reactive, ref} from "vue";
 import {User} from "../../models/user.model.ts";
 import {socket} from "../../utils/websocket.js"
 import ListScroll from "../../components/ListScroll.vue";
@@ -9,14 +9,17 @@ import {singleMessage} from "../../stores/singleMessage.ts";
 import {userStore} from "../../stores/user.ts";
 import V3Emoji from 'vue3-emoji'
 import 'vue3-emoji/dist/style.css'
+import {ElMessage} from "element-plus";
 
 const SingleMessage = singleMessage()
 const UserStore = userStore()
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
-
+const ListScrollRef: any = ref(null)
 let message = ref('')
 
+
 let friend: User = reactive(history.state.friend);
+const placeholder = `你正在和${friend.userName}聊天,请输入你的内容...`
 
 let emoji = ref(null)
 const sendMessage = () => {
@@ -54,6 +57,7 @@ const sendMessage = () => {
     }
     SingleMessage.receiveMessage.push(messageSelf)
     message.value = ''
+    ListScrollRef.value.toSendMessage()
   })
 
 
@@ -98,9 +102,12 @@ const getMessage = () => {
 
 }
 
+
 onMounted(() => {
   SingleMessage.friendId = friend.userId
   getMessage()
+
+  ElMessage.success(`你正在和${friend.userName}聊天`)
 })
 
 </script>
@@ -110,7 +117,7 @@ onMounted(() => {
     <el-container style="height: 100%;">
       <el-main style="background-color: #f8f8f8;height: 70%;padding: 0;margin: 0;">
         <div class="show-message" style="width: 100%;height: 100%">
-          <ListScroll>
+          <ListScroll ref="ListScrollRef">
             <div class="chat-container">
               <div v-for="(message, index) in SingleMessage.receiveMessage" :key="index"
                    :class="{ 'sent-message': Number(message.fromUser.userId) === Number(UserStore.user?.userId), 'received-message': Number(message.fromUser.userId) !== Number(UserStore.user?.userId) }">
@@ -131,17 +138,18 @@ onMounted(() => {
       </el-main>
       <el-footer style="padding: 0;margin: 0;background-color: #f8f8f8;height: 30%;border-top: #bbb0b0 solid 1px;">
         <div class="message" style="height: 100%;width: 100%;display: flex;flex-direction: column">
-          <div class="edit">
+          <div class="edit" style="display: flex;">
             <V3Emoji
                 @click-emoji="appendText"
                 :recent="true"
                 :fulldata="true"
+                className="edit-emoji"
             />
           </div>
           <div class="send-message">
             <el-input
                 v-model="message"
-                placeholder="输入消息..."
+                :placeholder=placeholder
                 type="textarea"
                 resize="none"
                 :autosize="{ minRows: 4.6, maxRows: 4.6 }"
@@ -225,6 +233,12 @@ onMounted(() => {
     resize: none;
     cursor: default;
   }
+}
+
+:deep(.emoji-container) {
+
+  height: 100%;
+  align-items: center;
 }
 
 

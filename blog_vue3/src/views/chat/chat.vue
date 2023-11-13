@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, reactive, ref, getCurrentInstance} from "vue";
+import {onMounted, reactive, ref, getCurrentInstance, onBeforeMount} from "vue";
 import {activeIndexStore} from "../../stores/activeIndex";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {userStore} from "../../stores/user.ts";
@@ -8,6 +8,7 @@ import {socket} from "../../utils/websocket.js";
 import {useRouter} from "vue-router";
 import {singleMessage} from "../../stores/singleMessage.ts";
 import qs from "qs";
+import {readStore} from "../../stores/read.ts";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 
@@ -22,10 +23,12 @@ const friendApplySize = ref(0)
 
 let friendApplyList: User[] = reactive([])
 
+let offLineMessage = reactive({})
+
 let friendList: User[] = reactive([])
 
 const friendListSize = ref(0)
-
+const ReadStore = readStore()
 const toSearch = () => {
   $http({
     url: `/identify/blog/identify/getByUserName/${searchId.value}`,
@@ -60,6 +63,8 @@ const judgeHaven = () => {
     } else {
       ElMessage.warning("已经添加过该好友")
     }
+  }).catch(() => {
+    ElMessage.warning("没有此用户")
   })
 }
 
@@ -134,9 +139,21 @@ const reject = (userId: number, friendId: number) => {
 const goSingleChat = (friend: any) => {
   SingleMessage.receiveMessage = []
   SingleMessage.friendId = ''
+  offLineMessage[Number(friend.userId)] = 0
+  clearRedPoint(friend.userId)
   router.push({path: '/home/chat/single', query: {friendId: friend.userId}, state: {friend}})
 }
 
+const clearRedPoint = (friendId) => {
+  $http({
+    url: "/chat/blog/redis/redPoint/clear",
+    method: 'put',
+    data: $http.adornData({userId: UserStore.user?.userId, friendId: friendId}, false, 'json')
+  }).then(({data}) => {
+    console.log(data.data)
+    ReadStore.read[friendId] = 0
+  })
+}
 
 const wsAddFriend = (userId: any) => {
   let data = {
@@ -158,12 +175,37 @@ const getFriends = () => {
   })
 }
 
+const getOffLineMessage = () => {
+  $http({
+    url: `/chat/blog/redis/getOffline/${UserStore.user?.userId}`,
+    method: 'get'
+  }).then(({data}) => {
+    offLineMessage = data.data
+  })
+}
+
+onBeforeMount(() => {
+  SingleMessage.friendId = ''
+})
+
+
+const redPointExit = () => {
+  $http({
+    url: `/chat/blog/redis/redPoint/exit/${UserStore.user?.userId}`,
+    method: 'get'
+  }).then(({data}) => {
+    ReadStore.read = data.data
+    console.log("redPointExit", ReadStore.read)
+  })
+}
 
 onMounted(() => {
   socket.init()
   ActiveIndexStore.activeIndex = '/home/chat'
   getApply()
   getFriends()
+  getOffLineMessage()
+  redPointExit()
 })
 
 </script>
@@ -173,6 +215,7 @@ onMounted(() => {
   <div class="chat-container">
     <el-container style="height: 99.9%">
       <el-aside width="350px">
+
         <el-menu class="el-menu-vertical-demo" @open="handlerOpen">
 
 
@@ -193,7 +236,8 @@ onMounted(() => {
               <font-awesome-icon :icon="['far', 'user']" style="margin-left: 51.2%"/>
               &nbsp;&nbsp;<span style="color: black">{{ friendListSize }}</span>
             </template>
-            <el-menu-item @click="goSingleChat(friend)"
+            <el-menu-item :index="String(friend.userId)"
+                          @click="Number(SingleMessage.friendId) !== Number(friend.userId) && goSingleChat(friend)"
                           v-for="friend in friendList" :key="friend.userId" style="height: 150px">
               <div class="friend-box">
                 <div class="friend-userInfo">
@@ -205,6 +249,20 @@ onMounted(() => {
                       <div class="friend-message" style="margin: auto">
                         <span style="font-weight: bolder">昵称：{{ friend.userNickname }}</span><br>
                         <span style="font-weight: 100">{{ friend.userName }}</span>
+                      </div>
+
+                      <div style="position: absolute;right: 0;top: -10px;font-weight: 100;color: red">
+                        <span>
+                        {{
+                            ReadStore.read[Number(friend.userId)] === null || ReadStore.read[Number(friend.userId)] === undefined || ReadStore.read[Number(friend.userId)] === 0 ? '' : "未读：" + ReadStore.read[Number(friend.userId)]
+                          }}
+                          </span>
+                        &nbsp;
+                        <span>
+                        {{
+                            offLineMessage[Number(friend.userId)] === 0 ? '' : "离线：" + offLineMessage[Number(friend.userId)]
+                          }}
+                          </span>
                       </div>
                     </el-col>
                   </el-row>
@@ -230,8 +288,8 @@ onMounted(() => {
                 <location/>
               </el-icon>
               <span>好友申请</span>
-              <font-awesome-icon style="margin-left: 50%;color: red" :icon="['far', 'message']"/>&nbsp;&nbsp;<span
-                style="color: red">{{ friendApplySize }}</span>
+              <font-awesome-icon style="margin-left: 50%;"
+                                 :icon="['far', 'message']"/>&nbsp;&nbsp;<span>{{ friendApplySize }}</span>
             </template>
             <el-menu-item v-for="apply in friendApplyList" :key="apply.userId" style="height: 150px">
               <div class="apply-box">
@@ -261,9 +319,8 @@ onMounted(() => {
               </div>
             </el-menu-item>
           </el-sub-menu>
-
-
         </el-menu>
+
       </el-aside>
       <el-container style="height: auto;min-height: 100%">
         <el-header style="padding: 10px">
@@ -299,10 +356,6 @@ onMounted(() => {
   /* Set the parent container's size here */
   width: 400px; /* Example width */
   height: 600px; /* Example height */
-}
-
-.el-menu-item {
-
 }
 
 .apply-box {

@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import BScroll from "better-scroll";
-import {nextTick, onMounted, onUnmounted, onUpdated, ref, watch} from "vue";
-import {singleMessage} from "../stores/singleMessage.ts";
-import {userStore} from "../stores/user.ts";
-import {ElNotification} from "element-plus";
+import {nextTick, onMounted, onUnmounted, onUpdated, ref} from "vue";
+import bus from 'vue3-eventbus'
 
 let scroll = ref(null)
 
-const SingleMessage = singleMessage()
-const UserStore = userStore()
 
 const initScroll = () => {
   scroll.value = new BScroll(document.querySelector('.wrapper'), {
@@ -24,19 +20,26 @@ const initScroll = () => {
 
   })
   scroll.value.on('scrollEnd', (pos) => {
-
   })
 }
 
-watch(
-    () => SingleMessage.receiveMessage,
-    (value, oldValue) => {
-        scroll.value.scrollTo(0, scroll.value.maxScrollY - 65, 300)
-    },
-    {
-      deep: true
-    }
-)
+
+const toSendMessage = () => {
+  scroll.value.scrollTo(0, scroll.value.maxScrollY - 65, 300)
+}
+
+//不相关传值
+bus.on('receiveMessageScroll',data =>{
+  if(data){
+    scroll.value.scrollTo(0, scroll.value.maxScrollY - 65, 300)
+  }
+})
+
+//父传子
+defineExpose({
+  toSendMessage
+})
+
 
 onMounted(() => {
   nextTick(() => {

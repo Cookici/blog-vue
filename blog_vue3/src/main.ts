@@ -10,6 +10,7 @@ import router from "./router/index.js";
 import ElementPlus from 'element-plus'
 import http from "./utils/axios.js";
 import VueCropper from 'vue-cropper';
+import eventBus from 'vue3-eventbus'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import piniaPersist from 'pinia-plugin-persist'
 import 'vue-cropper/dist/index.css'
@@ -30,8 +31,8 @@ app.use(router)
     .use(ElementPlus)
     .use(pinia)
     .use(VueCropper)
+    .use(eventBus)
     .component('font-awesome-icon', FontAwesomeIcon)
-
 
 
 

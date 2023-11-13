@@ -29,7 +29,8 @@
     "vue": "^3.3.6",
     "vue-cropper": "^1.1.1",
     "vue-router": "^4.0.0",
-    "vue3-emoji": "^2.0.0"
+    "vue3-emoji": "^2.0.0",
+    "vue3-eventbus": "^2.0.0"
   },
   "devDependencies": {
     "@types/uuid": "^9.0.6",

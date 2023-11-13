@@ -8,6 +8,8 @@ import {activeIndexStore} from "../stores/activeIndex.ts";
 import Cropper from "../components/upload/cropper.vue";
 import {socket} from "../utils/websocket.js";
 import {singleMessage} from "../stores/singleMessage.ts";
+import bus from 'vue3-eventbus'
+import {readStore} from "../stores/read.ts";
 
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
@@ -15,6 +17,7 @@ const UserStore = userStore()
 const router = useRouter()
 const ActiveIndexStore = activeIndexStore()
 const SingleMessage = singleMessage()
+const ReadStore = readStore()
 
 let keyword = ref('')
 let dialogVisible = ref(false)
@@ -57,6 +60,7 @@ const seeDetail = () => {
 
 let user: User = JSON.parse(localStorage.getItem('user') as any).user
 
+
 const messageFromWebSocket = () => {
   socket.ws.onmessage = function (msg: any) {
     const res = JSON.parse(msg.data);
@@ -73,16 +77,31 @@ const messageFromWebSocket = () => {
           type: "success",
         })
       }
-
       if (
           (Number(res.params.toUser.userId) === Number(UserStore.user?.userId) && Number(res.params.fromUser.userId) === Number(SingleMessage.friendId))
           || (Number(res.params.fromUser.userId) === Number(UserStore.user?.userId) && Number(res.params.toUser.userId) === Number(SingleMessage.friendId))
       ) {
         SingleMessage.receiveMessage.push(res.params)
+        bus.emit('receiveMessageScroll', {flag: true})
+      } else {
+        if (Number(res.params.toUser.userId) === Number(UserStore.user?.userId)) {
+          addRedPoint(UserStore.user?.userId,res.params.fromUser.userId)
+        }
       }
     }
   }
 }
+
+const addRedPoint = (userId,friendId) =>{
+  $http({
+    url: `/chat/blog/redis/redPoint/add/${userId}/${friendId}`,
+    method:'get'
+  }).then(({data})=>{
+    ReadStore.read = data.data
+    console.log(ReadStore.read)
+  })
+}
+
 
 
 onMounted(() => {
