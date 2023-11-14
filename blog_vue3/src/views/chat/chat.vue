@@ -29,6 +29,10 @@ let friendList: User[] = reactive([])
 
 const friendListSize = ref(0)
 const ReadStore = readStore()
+
+let groupList = reactive([])
+const groupsSize = ref(0)
+
 const toSearch = () => {
   $http({
     url: `/identify/blog/identify/getByUserName/${searchId.value}`,
@@ -66,12 +70,6 @@ const judgeHaven = () => {
   }).catch(() => {
     ElMessage.warning("没有此用户")
   })
-}
-
-const handlerOpen = (index: any) => {
-  if (index === '4') {
-    getApply()
-  }
 }
 
 const getApply = () => {
@@ -199,12 +197,41 @@ const redPointExit = () => {
   })
 }
 
+const createGroup = () => {
+  router.push({path: '/home/chat/createGroup'})
+}
+
+const getAllGroup = () => {
+  $http({
+    url: `/chat/blog/group/getGroups/${UserStore.user?.userId}`,
+    method: 'get'
+  }).then(({data}) => {
+    groupList = data.data.groups
+    groupsSize.value = data.data.groupsSize
+    console.log("groupList", groupList)
+    console.log("groupsSize", groupsSize.value)
+  })
+}
+
+//计算头像布局
+const computedAvatar = (avatarList) => {
+  if (avatarList.length > 4) {
+    return "avatarItem--3"
+  } else if (avatarList.length > 1) {
+    return "avatarItem--2"
+  } else {
+    return "avatarItem--1"
+  }
+}
+
+
 onMounted(() => {
   socket.init()
   ActiveIndexStore.activeIndex = '/home/chat'
   getApply()
   getFriends()
   getOffLineMessage()
+  getAllGroup()
   redPointExit()
 })
 
@@ -216,18 +243,30 @@ onMounted(() => {
     <el-container style="height: 99.9%">
       <el-aside width="350px">
 
-        <el-menu class="el-menu-vertical-demo" @open="handlerOpen">
+        <el-menu class="el-menu-vertical-demo">
 
 
           <el-menu-item index="1">
-            <el-icon>
-              <icon-menu/>
-            </el-icon>
-            <span>聊天首页</span>
+            <template #title>
+              <el-icon>
+                <location/>
+              </el-icon>
+              <span>聊天首页</span>
+            </template>
           </el-menu-item>
 
 
-          <el-sub-menu index="2">
+          <el-menu-item index="2" @click="createGroup">
+            <template #title>
+              <el-icon>
+                <location/>
+              </el-icon>
+              <span>创建群聊</span>
+            </template>
+          </el-menu-item>
+
+
+          <el-sub-menu index="3">
             <template #title>
               <el-icon>
                 <location/>
@@ -236,14 +275,14 @@ onMounted(() => {
               <font-awesome-icon :icon="['far', 'user']" style="margin-left: 51.2%"/>
               &nbsp;&nbsp;<span style="color: black">{{ friendListSize }}</span>
             </template>
-            <el-menu-item :index="String(friend.userId)"
+            <el-menu-item :index="String(friend.userName)"
                           @click="Number(SingleMessage.friendId) !== Number(friend.userId) && goSingleChat(friend)"
                           v-for="friend in friendList" :key="friend.userId" style="height: 150px">
               <div class="friend-box">
                 <div class="friend-userInfo">
                   <el-row>
                     <el-col :span="12" style="padding: 10px">
-                      <el-image class="friend-img" :src="friend.userProfilePhoto"></el-image>
+                      <el-image  class="friend-img" :src="friend.userProfilePhoto"></el-image>
                     </el-col>
                     <el-col :span="12" style="text-align: center;display: flex;flex-direction: column">
                       <div class="friend-message" style="margin: auto">
@@ -260,7 +299,7 @@ onMounted(() => {
                         &nbsp;
                         <span>
                         {{
-                            offLineMessage[Number(friend.userId)] === 0 ? '' : "离线：" + offLineMessage[Number(friend.userId)]
+                            offLineMessage[Number(friend.userId)] === 0 || offLineMessage[Number(friend.userId)] === null || offLineMessage[Number(friend.userId)] === undefined ? '' : "离线：" + offLineMessage[Number(friend.userId)]
                           }}
                           </span>
                       </div>
@@ -272,17 +311,42 @@ onMounted(() => {
           </el-sub-menu>
 
 
-          <el-sub-menu index="3">
+          <el-sub-menu index="4">
             <template #title>
               <el-icon>
                 <location/>
               </el-icon>
               <span>群聊</span>
+              <font-awesome-icon :icon="['fas', 'user-group']" style="margin-left: 60%"/>
+              &nbsp;<span style="color: black">{{ groupsSize }}</span>
             </template>
+            <el-menu-item :index="String(group.groupName)"
+                          v-for="group in groupList" :key="group.groupId" style="height: 150px;">
+              <div class="group-box">
+                <div class="group-userInfo">
+                  <el-row>
+                    <el-col :span="12" style="padding: 10px">
+                      <div class="avatar">
+                        <template v-for="(photo,index) in group.photosUrl">
+                          <el-image :src="photo"
+                                    :key="index" :class="computedAvatar(group.photosUrl)" v-if="index<9"></el-image>
+                        </template>
+                      </div>
+                    </el-col>
+                    <el-col :span="12" style="text-align: center;display: flex;flex-direction: column">
+                      <div class="group-message" style="margin: auto">
+                        <span style="font-weight: bolder">群聊号：{{ group.blogGroup.groupId }}</span><br>
+                        <span style="font-weight: 100">群聊名称：{{ group.blogGroup.groupName }}</span>
+                      </div>
+                    </el-col>
+                  </el-row>
+                </div>
+              </div>
+            </el-menu-item>
           </el-sub-menu>
 
 
-          <el-sub-menu index="4">
+          <el-sub-menu index="5">
             <template #title>
               <el-icon>
                 <location/>
@@ -391,6 +455,38 @@ onMounted(() => {
   width: 80px;
 }
 
-/* Additional styles for buttons, images, etc. can be added as needed */
+
+.avatar {
+
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-content: center;
+  flex-wrap: wrap-reverse;
+  border: rgb(187,176,176) 1px solid;
+}
+
+
+.avatarItem--1 {
+  all: initial;
+  width: 98%;
+  height: 98%;
+}
+
+.avatarItem--2 {
+  all: initial;
+  width: 47%;
+  height: 47%;
+  margin: 1%;
+}
+
+.avatarItem--3 {
+  all: initial;
+  width: 32%;
+  height: 30%;
+  margin: 1%;
+}
+
 
 </style>

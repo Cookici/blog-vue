@@ -91,7 +91,7 @@ let socket = {
 
         socket.ws.onerror = function (err) {
             ElMessage({
-                message: '服务连接发送错误',
+                message: '服务连接发生错误',
                 type: 'error',
             });
         }

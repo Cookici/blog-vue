@@ -85,23 +85,22 @@ const messageFromWebSocket = () => {
         bus.emit('receiveMessageScroll', {flag: true})
       } else {
         if (Number(res.params.toUser.userId) === Number(UserStore.user?.userId)) {
-          addRedPoint(UserStore.user?.userId,res.params.fromUser.userId)
+          addRedPoint(UserStore.user?.userId, res.params.fromUser.userId)
         }
       }
     }
   }
 }
 
-const addRedPoint = (userId,friendId) =>{
+const addRedPoint = (userId, friendId) => {
   $http({
     url: `/chat/blog/redis/redPoint/add/${userId}/${friendId}`,
-    method:'get'
-  }).then(({data})=>{
+    method: 'get'
+  }).then(({data}) => {
     ReadStore.read = data.data
-    console.log(ReadStore.read)
+    console.log("ReadStore:", ReadStore.read)
   })
 }
-
 
 
 onMounted(() => {
@@ -233,8 +232,8 @@ onMounted(() => {
 .userDetail img {
   margin-left: 30px;
   object-fit: fill;
-  width: 70px;
-  height: 70px;
+  width: 65px;
+  height: 65px;
   border-radius: 100%;
   outline: none; /*取消黑边*/
 }
