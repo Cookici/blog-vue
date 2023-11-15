@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {getCurrentInstance, onMounted, ref} from 'vue'
+import {getCurrentInstance, onBeforeMount, onBeforeUnmount, onMounted, ref} from 'vue'
 import {User} from "../models/user.model.ts";
 import {ElMessage, ElNotification} from "element-plus";
 import {useRouter} from "vue-router";
@@ -10,6 +10,9 @@ import {socket} from "../utils/websocket.js";
 import {singleMessage} from "../stores/singleMessage.ts";
 import bus from 'vue3-eventbus'
 import {readStore} from "../stores/read.ts";
+import {groupListStore} from "../stores/groupList.ts";
+import {groupMessage} from "../stores/groupMessage.ts";
+import {groupReadStore} from "../stores/groupRead.ts";
 
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
@@ -18,6 +21,10 @@ const router = useRouter()
 const ActiveIndexStore = activeIndexStore()
 const SingleMessage = singleMessage()
 const ReadStore = readStore()
+const GroupListStore = groupListStore()
+const GroupMessage = groupMessage()
+const GroupReadStore = groupReadStore()
+
 
 let keyword = ref('')
 let dialogVisible = ref(false)
@@ -88,6 +95,19 @@ const messageFromWebSocket = () => {
           addRedPoint(UserStore.user?.userId, res.params.fromUser.userId)
         }
       }
+    } else if (res.type === 7) {
+      if (Number(res.params.groupId) === Number(GroupMessage.groupId)) {
+        console.log(res.params)
+        GroupMessage.receiveGroupMessage.push(res.params)
+        bus.emit('receiveMessageScroll', {flag: true})
+      } else {
+        ElNotification({
+          title: "提示",
+          message: `群聊${res.params.groupId}的新消息来咯`,
+          type: "success",
+        })
+        addGroupRedPoint(UserStore.user?.userId, res.params.groupId)
+      }
     }
   }
 }
@@ -102,12 +122,63 @@ const addRedPoint = (userId, friendId) => {
   })
 }
 
+const addGroupRedPoint = (userId,groupId) => {
+  $http({
+    url: `/chat/blog/redis/redPoint/group/add/${userId}/${groupId}`,
+    method: 'get'
+  }).then(({data}) => {
+    GroupReadStore.groupRead = data.data
+    console.log("GroupReadStore:", data.data)
+  })
+
+}
+
+
+const getAllGroup = () => {
+  $http({
+    url: `/chat/blog/group/getGroups/${UserStore.user?.userId}`,
+    method: 'get'
+  }).then(({data}) => {
+    console.log(data.data)
+    GroupListStore.groupList = data.data.groups
+    GroupListStore.groupListSize = data.data.groupsSize
+    console.log("home groupList", GroupListStore.groupList)
+    console.log("home groupsSize", GroupListStore.groupListSize)
+    sendCreateGroup()
+  })
+}
+
+
+const sendCreateGroup = () => {
+  console.log("sendCreateGroup")
+  for (let i = 0; i < GroupListStore.groupList.length; i++) {
+    console.log("sendCreateGroup begin")
+    let data = {
+      type: 3,
+      params: {
+        userIdList: GroupListStore.groupList[i].blogGroup.usersId.substring(1, GroupListStore.groupList[i].blogGroup.usersId.length - 1),
+        groupId: GroupListStore.groupList[i].blogGroup.groupId
+      }
+    }
+    console.log(data.params.userIdList)
+    socket.send(data)
+  }
+}
+
+
+onBeforeMount(() => {
+  socket.register(1)
+  getAllGroup()
+})
 
 onMounted(() => {
-  socket.init()
-  socket.register(1)
   messageFromWebSocket()
 })
+
+onBeforeUnmount(() => {
+  socket.register(0)
+})
+
 
 </script>
 

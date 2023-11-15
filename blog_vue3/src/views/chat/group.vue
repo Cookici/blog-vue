@@ -1,71 +1,53 @@
 <script setup lang="ts">
 
-
-import {getCurrentInstance, onMounted, reactive, ref} from "vue";
-import {User} from "../../models/user.model.ts";
-import {socket} from "../../utils/websocket.js"
-import ListScroll from "../../components/ListScroll.vue";
-import {singleMessage} from "../../stores/singleMessage.ts";
-import {userStore} from "../../stores/user.ts";
-import V3Emoji from 'vue3-emoji'
+import {onMounted, ref} from "vue";
+import {socket} from "../../utils/websocket.js";
+import V3Emoji from "vue3-emoji";
 import 'vue3-emoji/dist/style.css'
-import {ElMessage} from "element-plus";
+import {useRouter} from "vue-router";
+import {groupMessage} from "../../stores/groupMessage.ts";
+import ListScroll from "../../components/ListScroll.vue";
+import {groupListStore} from "../../stores/groupList.ts";
+import {userStore} from "../../stores/user.ts";
 
-const SingleMessage = singleMessage()
-const UserStore = userStore()
-const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
-const ListScrollRef: any = ref(null)
+
 let message = ref('')
-
-
-let friend: User = reactive(history.state.friend);
-const placeholder = `你正在和${friend.userName}聊天,请输入你的内容...`
-
-let emoji = ref(null)
+const placeholder = `请输入内容...`
+const router = useRouter()
+const UserStore = userStore()
+const GroupMessage = groupMessage()
+const GroupListStore = groupListStore()
+const ListScrollRef: any = ref(null)
 const sendMessage = () => {
 
-  let friendName = ''
-
   let data = {
-    type: 2,
+    type: 4,
     params: {
       message: message.value,
-      toMessageId: friend.userId,
-      fileType: "text",
+      toMessageId: router.currentRoute.value.query.groupId,
+      fileType: 'text'
     }
   }
   socket.send(data)
 
-  $http({
-    url: `/chat/blog/chat/getFriend/${friend.userId}`,
-    method: 'get'
-  }).then(({data}) => {
-    console.log(data)
-    friendName = data.data.userName
-    let messageSelf = {
-      message: message.value,
-      fromUser: {
-        userId: UserStore.user?.userId,
-        userName: UserStore.user?.userName,
-      },
-      toUser: {
-        userId: friend.userId,
-        userName: friendName
-      },
-      fileType: "text",
-      time: new Date()
-    }
-    SingleMessage.receiveMessage.push(messageSelf)
-    message.value = ''
-    ListScrollRef.value.toSendMessage()
-  })
-
-
+  let messageSelf = {
+    message: message.value,
+    fromUser: {
+      userId: UserStore.user?.userId,
+      userName: UserStore.user?.userName,
+    },
+    groupId: GroupMessage.groupId,
+    fileType: "text",
+    time: new Date()
+  }
+  GroupMessage.receiveGroupMessage.push(messageSelf)
+  ListScrollRef.value.toSendMessage()
 }
 
 const keyCall = (e) => {
   if (e.ctrlKey && e.keyCode == 13) {
     sendMessage()
+    message.value = ''
   }
 }
 
@@ -73,55 +55,40 @@ const appendText = (param) => {
   message.value += param.emoji
 }
 
-const getMessage = () => {
-  $http({
-    url: `/chat/blog/redis/getFriendSingleMessage/${UserStore.user?.userId}/${friend.userId}`,
-    method: 'get'
-  }).then(({data}) => {
-    console.log(data)
-    let messages = data.data
-    let array = []
-    let trueObj = {}
-    for (let i = 0; i < messages.length; i++) {
-      trueObj = {
-        fromUser: {
-          userId: data.data[i].fromId,
-          userName: UserStore.user?.userName
-        },
-        toUser: {
-          userId: data.data[i].toId,
-          userName: friend.userName
-        },
-        message: data.data[i].infoContent,
-        time: data.data[i].time
-      }
-      array.push(trueObj)
-    }
-    SingleMessage.receiveMessage = array
-  })
-
-}
 
 
 onMounted(() => {
-  SingleMessage.friendId = friend.userId
-  getMessage()
-  ElMessage.success(`你正在和${friend.userName}聊天`)
+  GroupMessage.groupId = router.currentRoute.value.query.groupId
 })
+
+function findPhoto(id) {
+  let currentGroup;
+  for (let i = 0; i < GroupListStore.groupListSize; i++) {
+    if (Number(GroupListStore.groupList[i].blogGroup.groupId) === Number(router.currentRoute.value.query.groupId)) {
+      currentGroup = GroupListStore.groupList[i]
+      for (let i = 0; i < currentGroup.photosUrl.length; i++) {
+        if (Number(currentGroup.photosUrl[i].id) === Number(id)) {
+          return currentGroup.photosUrl[i].photoUrl
+        }
+      }
+    }
+  }
+}
+
 
 </script>
 
 <template>
-  <div class="single-container">
+  <div class="group-container">
     <el-container style="height: 100%;">
       <el-main style="background-color: #f8f8f8;height: 70%;padding: 0;margin: 0;">
         <div class="show-message" style="width: 100%;height: 100%">
           <ListScroll ref="ListScrollRef">
             <div class="chat-container">
-              <div v-for="(message, index) in SingleMessage.receiveMessage" :key="index"
+              <div v-for="(message, index) in GroupMessage.receiveGroupMessage" :key="index"
                    :class="{ 'sent-message': Number(message.fromUser.userId) === Number(UserStore.user?.userId), 'received-message': Number(message.fromUser.userId) !== Number(UserStore.user?.userId) }">
                 <div v-if="Number(message.fromUser.userId) !== Number(UserStore.user?.userId)" class="avatar">
-                  <el-image :src="friend.userProfilePhoto"></el-image>
+                  <el-image :src="findPhoto(message.fromUser.userId)"></el-image>
                 </div> <!-- Left Avatar -->
                 <div class="message-bubble">
                   {{ message.message }}
@@ -139,9 +106,9 @@ onMounted(() => {
         <div class="message" style="height: 100%;width: 100%;display: flex;flex-direction: column">
           <div class="edit" style="display: flex;">
             <V3Emoji
-                @click-emoji="appendText"
                 :recent="true"
                 :fulldata="true"
+                @click-emoji="appendText"
             />
           </div>
           <div class="send-message">
@@ -155,7 +122,7 @@ onMounted(() => {
             />
           </div>
           <div class="send-btn">
-            <el-button style="position: absolute;right: 30px;" type="primary" @click="sendMessage">发送</el-button>
+            <el-button style="position: absolute;right: 30px;" type="primary" @keyup.enter.native="keyCall" @click="sendMessage">发送</el-button>
           </div>
         </div>
       </el-footer>
@@ -164,8 +131,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-
-.single-container {
+.group-container {
   width: 100%;
   height: 100%;
 }
@@ -238,6 +204,4 @@ onMounted(() => {
   height: 100%;
   align-items: center;
 }
-
-
 </style>

@@ -10,5 +10,11 @@
 
 <script lang="ts" setup>
 
+import {onMounted} from "vue";
+import {socket} from "./utils/websocket.js";
+
+onMounted(() => {
+  socket.init()
+})
 
 </script>

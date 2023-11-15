@@ -51,6 +51,11 @@ const routes = [
                         path: '/home/chat/createGroup',
                         name: 'CreatGroup',
                         component: () => import('../views/chat/createGroup.vue')
+                    },
+                    {
+                        path: '/home/chat/group',
+                        name: 'Group',
+                        component: () => import('../views/chat/group.vue')
                     }
                 ]
             }

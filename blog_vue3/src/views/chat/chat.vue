@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, reactive, ref, getCurrentInstance, onBeforeMount} from "vue";
+import {onMounted, reactive, ref, getCurrentInstance, onBeforeMount, onUnmounted} from "vue";
 import {activeIndexStore} from "../../stores/activeIndex";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {userStore} from "../../stores/user.ts";
@@ -9,6 +9,9 @@ import {useRouter} from "vue-router";
 import {singleMessage} from "../../stores/singleMessage.ts";
 import qs from "qs";
 import {readStore} from "../../stores/read.ts";
+import {groupListStore} from "../../stores/groupList.ts";
+import {groupMessage} from "../../stores/groupMessage.ts";
+import {groupReadStore} from "../../stores/groupRead.ts";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 
@@ -16,6 +19,9 @@ const ActiveIndexStore = activeIndexStore()
 const UserStore = userStore()
 const router = useRouter()
 const SingleMessage = singleMessage()
+const GroupListStore = groupListStore()
+const GroupMessage = groupMessage()
+const GroupReadStore = groupReadStore()
 
 let searchId = ref('')
 
@@ -30,8 +36,7 @@ let friendList: User[] = reactive([])
 const friendListSize = ref(0)
 const ReadStore = readStore()
 
-let groupList = reactive([])
-const groupsSize = ref(0)
+let offLineGroupMessage = reactive({})
 
 const toSearch = () => {
   $http({
@@ -153,6 +158,17 @@ const clearRedPoint = (friendId) => {
   })
 }
 
+const clearRedGroupPoint = (groupId) => {
+  $http({
+    url: "/chat/blog/redis/redPoint/group/clear",
+    method: 'put',
+    data: $http.adornData({userId: UserStore.user?.userId, groupId: groupId}, false, 'json')
+  }).then(({data}) => {
+    GroupReadStore.groupRead[groupId] = 0
+    console.log(data.data)
+  })
+}
+
 const wsAddFriend = (userId: any) => {
   let data = {
     type: 5,
@@ -186,6 +202,26 @@ onBeforeMount(() => {
   SingleMessage.friendId = ''
 })
 
+const groupChat = (group, groupList) => {
+  GroupMessage.receiveGroupMessage = []
+  GroupMessage.groupId = ''
+  offLineGroupMessage[Number(group.blogGroup.groupId)] = 0
+  clearRedGroupPoint(group.blogGroup.groupId)
+  router.push({path: '/home/chat/group', query: {groupId: group.blogGroup.groupId}, state: {groupList}})
+}
+
+const getOffLineGroupMessage = () => {
+
+  $http({
+    url: `/chat/blog/group/noReadGroupMessage/${UserStore.user?.userId}`,
+    method: 'get'
+  }).then(({data}) => {
+    console.log("getOffLineGroupMessage ==> ", data.data)
+    offLineGroupMessage = data.data
+  })
+
+}
+
 
 const redPointExit = () => {
   $http({
@@ -197,21 +233,21 @@ const redPointExit = () => {
   })
 }
 
+
+const redPointGroupExit = () => {
+  $http({
+    url: `/chat/blog/redis/redPoint/group/exit/${UserStore.user?.userId}`,
+    method: 'get'
+  }).then(({data}) => {
+    GroupReadStore.groupRead = data.data
+    console.log("GroupReadStore", GroupReadStore.groupRead)
+  })
+}
+
 const createGroup = () => {
   router.push({path: '/home/chat/createGroup'})
 }
 
-const getAllGroup = () => {
-  $http({
-    url: `/chat/blog/group/getGroups/${UserStore.user?.userId}`,
-    method: 'get'
-  }).then(({data}) => {
-    groupList = data.data.groups
-    groupsSize.value = data.data.groupsSize
-    console.log("groupList", groupList)
-    console.log("groupsSize", groupsSize.value)
-  })
-}
 
 //计算头像布局
 const computedAvatar = (avatarList) => {
@@ -224,16 +260,16 @@ const computedAvatar = (avatarList) => {
   }
 }
 
-
 onMounted(() => {
-  socket.init()
   ActiveIndexStore.activeIndex = '/home/chat'
   getApply()
   getFriends()
   getOffLineMessage()
-  getAllGroup()
+  getOffLineGroupMessage()
   redPointExit()
+  redPointGroupExit()
 })
+
 
 </script>
 
@@ -282,7 +318,7 @@ onMounted(() => {
                 <div class="friend-userInfo">
                   <el-row>
                     <el-col :span="12" style="padding: 10px">
-                      <el-image  class="friend-img" :src="friend.userProfilePhoto"></el-image>
+                      <el-image class="friend-img" :src="friend.userProfilePhoto"></el-image>
                     </el-col>
                     <el-col :span="12" style="text-align: center;display: flex;flex-direction: column">
                       <div class="friend-message" style="margin: auto">
@@ -318,25 +354,40 @@ onMounted(() => {
               </el-icon>
               <span>群聊</span>
               <font-awesome-icon :icon="['fas', 'user-group']" style="margin-left: 60%"/>
-              &nbsp;<span style="color: black">{{ groupsSize }}</span>
+              &nbsp;<span style="color: black">{{ GroupListStore.groupListSize }}</span>
             </template>
-            <el-menu-item :index="String(group.groupName)"
-                          v-for="group in groupList" :key="group.groupId" style="height: 150px;">
-              <div class="group-box">
-                <div class="group-userInfo">
+            <el-menu-item :index="String(group.blogGroup.groupName)"
+                          @click="Number(GroupMessage.groupId) !== Number(group.blogGroup.groupId) && groupChat(group,groupList)"
+                          v-for="group in GroupListStore.groupList" :key="group.blogGroup.groupId"
+                          style="height: 150px;">
+              <div class="groupList-box">
+                <div class="groupList-userInfo">
                   <el-row>
                     <el-col :span="12" style="padding: 10px">
                       <div class="avatar">
                         <template v-for="(photo,index) in group.photosUrl">
-                          <el-image :src="photo"
+                          <el-image :src="photo.photoUrl"
                                     :key="index" :class="computedAvatar(group.photosUrl)" v-if="index<9"></el-image>
                         </template>
                       </div>
                     </el-col>
                     <el-col :span="12" style="text-align: center;display: flex;flex-direction: column">
-                      <div class="group-message" style="margin: auto">
+                      <div class="groupList-message" style="margin: auto">
                         <span style="font-weight: bolder">群聊号：{{ group.blogGroup.groupId }}</span><br>
                         <span style="font-weight: 100">群聊名称：{{ group.blogGroup.groupName }}</span>
+                      </div>
+                      <div style="position: absolute;right: 0;top: -10px;font-weight: 100;color: red">
+                        <span>
+                        {{
+                          GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === null || GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === undefined || GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === 0 ? '' : "未读：" + GroupReadStore.groupRead[Number(group.blogGroup.groupId)]
+                        }}
+                        </span>
+                        &nbsp;
+                        <span>
+                        {{
+                            offLineGroupMessage[Number(group.blogGroup.groupId)] === 0 || offLineGroupMessage[Number(group.blogGroup.groupId)] === null || offLineGroupMessage[Number(group.blogGroup.groupId)] === undefined ? '' : "离线：" + offLineGroupMessage[Number(group.blogGroup.groupId)]
+                          }}
+                          </span>
                       </div>
                     </el-col>
                   </el-row>
@@ -394,7 +445,11 @@ onMounted(() => {
           </div>
         </el-header>
         <el-main style="padding: 0;margin: 0">
-          <router-view :key="$route.fullPath"></router-view>
+          <router-view v-slot="{ Component }">
+            <keep-alive>
+              <component :is="Component"/>
+            </keep-alive>
+          </router-view>
         </el-main>
       </el-container>
     </el-container>
@@ -464,7 +519,7 @@ onMounted(() => {
   align-items: center;
   align-content: center;
   flex-wrap: wrap-reverse;
-  border: rgb(187,176,176) 1px solid;
+  border: rgb(187, 176, 176) 1px solid;
 }
 
 
