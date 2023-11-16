@@ -243,7 +243,7 @@ onBeforeUnmount(() => {
             <el-menu-item index="/home/content">博客主页</el-menu-item>
             <el-menu-item index="/home/subArticle">发表博客</el-menu-item>
             <el-menu-item index="3">个人中心</el-menu-item>
-            <el-menu-item index="/home/chat">聊天室</el-menu-item>
+            <el-menu-item index="/home/chat">聊天主页</el-menu-item>
           </el-menu>
         </div>
       </el-col>

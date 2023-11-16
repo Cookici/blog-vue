@@ -9,7 +9,7 @@
           </div>
         </template>
         <div v-for="photo in photos" :key="photo.Id" class="items">
-          <el-image  :src="photo?.photo" fit='fill'
+          <el-image class="history-img"  :src="photo?.photo" fit='fill'
                     @click="loveBack(UserStore?.user?.userId,photo)"/>
         </div>
       </el-card>
@@ -120,7 +120,7 @@ const loveBack = (userId, photo) => {
 
 }
 
-.el-image{
+.history-img{
   background-color: #ffffff;
   box-shadow: 2px 2px 30px rgba(0, 0, 0, 0.05);
   align-items: center;
@@ -131,7 +131,7 @@ const loveBack = (userId, photo) => {
   cursor:pointer;
 }
 
-.el-image:hover {
+.history-img:hover {
   box-shadow: 2px 2px 30px rgba(4, 15, 29, 0.1);
   transform: scale(1.01);
   transition: all ease 0.1s;

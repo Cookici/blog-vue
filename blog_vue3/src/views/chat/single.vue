@@ -10,7 +10,9 @@ import {userStore} from "../../stores/user.ts";
 import V3Emoji from 'vue3-emoji'
 import 'vue3-emoji/dist/style.css'
 import {ElMessage} from "element-plus";
+import {groupMessage} from "../../stores/groupMessage.ts";
 
+const GroupMessage = groupMessage()
 const SingleMessage = singleMessage()
 const UserStore = userStore()
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
@@ -103,7 +105,9 @@ const getMessage = () => {
 }
 
 
+
 onMounted(() => {
+  GroupMessage.groupId = ''
   SingleMessage.friendId = friend.userId
   getMessage()
   ElMessage.success(`你正在和${friend.userName}聊天`)

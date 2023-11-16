@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import {onMounted, reactive, ref, getCurrentInstance, onBeforeMount, onUnmounted} from "vue";
+import {onMounted, reactive, ref, getCurrentInstance, onBeforeMount} from "vue";
 import {activeIndexStore} from "../../stores/activeIndex";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {userStore} from "../../stores/user.ts";
-import {User} from "../../models/user.model.ts";
 import {socket} from "../../utils/websocket.js";
 import {useRouter} from "vue-router";
 import {singleMessage} from "../../stores/singleMessage.ts";
@@ -12,6 +11,7 @@ import {readStore} from "../../stores/read.ts";
 import {groupListStore} from "../../stores/groupList.ts";
 import {groupMessage} from "../../stores/groupMessage.ts";
 import {groupReadStore} from "../../stores/groupRead.ts";
+import {User} from "../../models/user.model.ts";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 
@@ -210,6 +210,7 @@ const groupChat = (group, groupList) => {
   router.push({path: '/home/chat/group', query: {groupId: group.blogGroup.groupId}, state: {groupList}})
 }
 
+
 const getOffLineGroupMessage = () => {
 
   $http({
@@ -260,6 +261,10 @@ const computedAvatar = (avatarList) => {
   }
 }
 
+const goChatHome = () => {
+  router.push({path: '/home/chat'})
+}
+
 onMounted(() => {
   ActiveIndexStore.activeIndex = '/home/chat'
   getApply()
@@ -282,10 +287,10 @@ onMounted(() => {
         <el-menu class="el-menu-vertical-demo">
 
 
-          <el-menu-item index="1">
+          <el-menu-item index="1" @click="goChatHome">
             <template #title>
               <el-icon>
-                <location/>
+                <House/>
               </el-icon>
               <span>聊天首页</span>
             </template>
@@ -295,7 +300,7 @@ onMounted(() => {
           <el-menu-item index="2" @click="createGroup">
             <template #title>
               <el-icon>
-                <location/>
+                <Plus/>
               </el-icon>
               <span>创建群聊</span>
             </template>
@@ -305,10 +310,10 @@ onMounted(() => {
           <el-sub-menu index="3">
             <template #title>
               <el-icon>
-                <location/>
+                <ChatRound/>
               </el-icon>
               <span>我的好友</span>
-              <font-awesome-icon :icon="['far', 'user']" style="margin-left: 51.2%"/>
+              <font-awesome-icon :icon="['fas', 'user']" style="margin-left: 51.2%"/>
               &nbsp;&nbsp;<span style="color: black">{{ friendListSize }}</span>
             </template>
             <el-menu-item :index="String(friend.userName)"
@@ -350,7 +355,7 @@ onMounted(() => {
           <el-sub-menu index="4">
             <template #title>
               <el-icon>
-                <location/>
+                <ChatDotRound/>
               </el-icon>
               <span>群聊</span>
               <font-awesome-icon :icon="['fas', 'user-group']" style="margin-left: 60%"/>
@@ -379,8 +384,8 @@ onMounted(() => {
                       <div style="position: absolute;right: 0;top: -10px;font-weight: 100;color: red">
                         <span>
                         {{
-                          GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === null || GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === undefined || GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === 0 ? '' : "未读：" + GroupReadStore.groupRead[Number(group.blogGroup.groupId)]
-                        }}
+                            GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === null || GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === undefined || GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === 0 ? '' : "未读：" + GroupReadStore.groupRead[Number(group.blogGroup.groupId)]
+                          }}
                         </span>
                         &nbsp;
                         <span>
@@ -400,11 +405,11 @@ onMounted(() => {
           <el-sub-menu index="5">
             <template #title>
               <el-icon>
-                <location/>
+                <Star/>
               </el-icon>
               <span>好友申请</span>
               <font-awesome-icon style="margin-left: 50%;"
-                                 :icon="['far', 'message']"/>&nbsp;&nbsp;<span>{{ friendApplySize }}</span>
+                                 :icon="['fas', 'message']"/>&nbsp;&nbsp;<span>{{ friendApplySize }}</span>
             </template>
             <el-menu-item v-for="apply in friendApplyList" :key="apply.userId" style="height: 150px">
               <div class="apply-box">

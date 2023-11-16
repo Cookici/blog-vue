@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {onMounted, ref} from "vue";
+import {getCurrentInstance, onBeforeUnmount, onMounted, ref} from "vue";
 import {socket} from "../../utils/websocket.js";
 import V3Emoji from "vue3-emoji";
 import 'vue3-emoji/dist/style.css'
@@ -10,14 +10,14 @@ import ListScroll from "../../components/ListScroll.vue";
 import {groupListStore} from "../../stores/groupList.ts";
 import {userStore} from "../../stores/user.ts";
 
-
+const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 let message = ref('')
-const placeholder = `请输入内容...`
 const router = useRouter()
 const UserStore = userStore()
 const GroupMessage = groupMessage()
 const GroupListStore = groupListStore()
 const ListScrollRef: any = ref(null)
+const placeholder = `你现在正在${router.currentRoute.value.query.groupId}群聊里聊天,请输入内容...`
 const sendMessage = () => {
 
   let data = {
@@ -40,6 +40,7 @@ const sendMessage = () => {
     fileType: "text",
     time: new Date()
   }
+  message.value = ''
   GroupMessage.receiveGroupMessage.push(messageSelf)
   ListScrollRef.value.toSendMessage()
 }
@@ -47,7 +48,6 @@ const sendMessage = () => {
 const keyCall = (e) => {
   if (e.ctrlKey && e.keyCode == 13) {
     sendMessage()
-    message.value = ''
   }
 }
 
@@ -55,10 +55,50 @@ const appendText = (param) => {
   message.value += param.emoji
 }
 
+const getGroupAllMessage = (grouId) => {
+  $http({
+    url: `/chat/blog/redis/allGroupMessage/${grouId}`,
+    method: 'get',
+  }).then(({data}) => {
+    let messages = data.data
+    let array = []
+    let trueObj = {}
+    for (let i = 0; i < messages.length; i++) {
+      trueObj = {
+        fromUser: {
+          userId: data.data[i].fromId,
+          userName: UserStore.user?.userName
+        },
+        groupId: data.data[i].groupId,
+        message: data.data[i].infoContent,
+        time: data.data[i].time,
+        fileType: "text",
+      }
+      array.push(trueObj)
+    }
+    GroupMessage.receiveGroupMessage = array
+  })
+}
 
+const clearOffLineMessage = (groupId) => {
+  $http({
+    url: `/chat/blog/redis/group/setBitmap/${groupId}/${UserStore.user?.userId}`,
+    method: 'post',
+    data: $http.adornData({}, false, 'json')
+  }).then(({data}) => {
+    console.log(data.data)
+  })
+}
+
+
+onBeforeUnmount(()=>{
+  GroupMessage.groupId = ''
+})
 
 onMounted(() => {
   GroupMessage.groupId = router.currentRoute.value.query.groupId
+  clearOffLineMessage(router.currentRoute.value.query.groupId)
+  getGroupAllMessage(router.currentRoute.value.query.groupId)
 })
 
 function findPhoto(id) {
@@ -122,7 +162,9 @@ function findPhoto(id) {
             />
           </div>
           <div class="send-btn">
-            <el-button style="position: absolute;right: 30px;" type="primary" @keyup.enter.native="keyCall" @click="sendMessage">发送</el-button>
+            <el-button style="position: absolute;right: 30px;" type="primary" @keyup.enter.native="keyCall"
+                       @click="sendMessage">发送
+            </el-button>
           </div>
         </div>
       </el-footer>
