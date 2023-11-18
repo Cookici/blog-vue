@@ -57,7 +57,7 @@ const appendText = (param) => {
 
 const getGroupAllMessage = (grouId) => {
   $http({
-    url: `/chat/blog/redis/allGroupMessage/${grouId}`,
+    url: $http.adornUrl(`blog/redis/allGroupMessage/${grouId}`),
     method: 'get',
   }).then(({data}) => {
     let messages = data.data
@@ -82,7 +82,7 @@ const getGroupAllMessage = (grouId) => {
 
 const clearOffLineMessage = (groupId) => {
   $http({
-    url: `/chat/blog/redis/group/setBitmap/${groupId}/${UserStore.user?.userId}`,
+    url: $http.adornUrl(`blog/redis/group/setBitmap/${groupId}/${UserStore.user?.userId}`),
     method: 'post',
     data: $http.adornData({}, false, 'json')
   }).then(({data}) => {

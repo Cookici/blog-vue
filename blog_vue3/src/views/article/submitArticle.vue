@@ -139,7 +139,7 @@ const init = {
 
 const deleteFileFromServer = (fileUrl: string) => {
   $http({
-    url: `/oss/oss/deleteFile`,
+    url: $http.adornUrl(`blog/oss/deleteFile`),
     method: "delete",
     data: $http.adornData({userName: UserStore.user?.userName, photoUrl: fileUrl}, false, 'json')
   }).then(({data}: { data: any }) => {
@@ -171,7 +171,7 @@ const submit = () => {
   }
   ElMessageBox.confirm("提示", "是否提交博客", {}).then(() => {
     $http({
-      url: `/article/blog/articles/create/${UserStore.user?.userId}`,
+      url: $http.adornUrl(`blog/articles/create/${UserStore.user?.userId}`),
       method: "post",
       data: $http.adornData({title: title.value, content: content.value}, false, 'json')
     }).then(({data}: { data: any }) => {
@@ -211,6 +211,9 @@ onMounted(() => {
 
   <div class="padding" style="height: 10%"></div>
   <div class="article-container">
+    <div>
+
+    </div>
     <el-container style="display: flex;flex-direction: column">
       <el-header style="flex: 1">
         <div class="article-title">
@@ -221,7 +224,7 @@ onMounted(() => {
               type="textarea"
               placeholder="请输入标题..."
               show-word-limit
-              maxlength="30"
+              maxlength="50"
               resize="none"
               @keydown.enter.prevent
           />

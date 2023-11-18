@@ -5,3 +5,5 @@ declare module '*.vue' {
 }
 declare module 'pinia-plugin-persist';
 declare module "element-plus";
+declare module 'vue3-eventbus';
+declare module 'vue3-emoji';

@@ -18,6 +18,9 @@ type stringKey = Record<string, string>
 let form: stringKey = reactive({
   username: '',
   password: '',
+})
+
+let captcha = reactive({
   userKey: '',
   code: ''
 })
@@ -29,13 +32,18 @@ form.username = route.query.username as string ? route.query.username as string 
 
 const login = () => {
 
-  let formData = new FormData();
+  const params = new URLSearchParams();
 
   for (let key in form) {
-    formData.append(key, form[key]);
+    params.append(key, form[key]);
   }
 
-  axios.post('/identify/login', formData).then(response => {
+  axios({
+    method: 'post',
+    url: $http.adornUrl(`login?code=${captcha.code}&userKey=${captcha.userKey}`),
+    data: params,
+    headers: {'Content-Type': "application/x-www-form-urlencoded"}
+  }).then(response => {
     let getToken = response.headers['authorization']
     if (getToken !== undefined && getToken !== null) {
       TokenStore.setToken(getToken)
@@ -47,14 +55,17 @@ const login = () => {
       ElMessage.error(response.data.data)
     }
   })
+
 }
 
 
 const getUser = () => {
   $http({
-    url: `identify/blog/identify/get/${form.username}`,
+    url: $http.adornUrl(`blog/identify/get/${form.username}`),
     method: "get",
-  }).then(async ({data}: { data: any }) => {
+  }).then(async ({data}: {
+    data: any
+  }) => {
     console.log(data.data)
     UserStore.setUser(data.data as User)
     router.push({path: '/home/content'}).then(() => {
@@ -71,10 +82,12 @@ const changeCode = () => {
 
 const getCode = () => {
   $http({
-    url: '/identify/captcha',
+    url: $http.adornUrl(`captcha`),
     method: "get",
-  }).then(({data}: { data: any }) => {
-    form.userKey = data.data.userKey
+  }).then(({data}: {
+    data: any
+  }) => {
+    captcha.userKey = data.data.userKey
     captcherImg.value = data.data.captcherImg
   })
 }
@@ -104,7 +117,7 @@ onMounted(() => {
                   show-password></el-input>
       </el-form-item>
       <el-form-item label="验证码">
-        <el-input type="text" v-model="form.code" placeholder="验证码" autocomplete="off"
+        <el-input type="text" v-model="captcha.code" placeholder="验证码" autocomplete="off"
                   @keyup.enter="login()"></el-input>
       </el-form-item>
     </el-form>

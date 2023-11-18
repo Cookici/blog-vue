@@ -24,7 +24,7 @@ let socket = {
     /**
      * 心跳发送频率
      * */
-    heartbeat_interval: 1000 * 20,
+    heartbeat_interval: 1000 * 25 * 60,
     /**
      * 是否开启重连
      * */

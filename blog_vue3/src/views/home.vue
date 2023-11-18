@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {getCurrentInstance, onBeforeMount, onBeforeUnmount, onMounted, ref} from 'vue'
-import {User} from "../models/user.model.ts";
 import {ElMessage, ElNotification} from "element-plus";
 import {useRouter} from "vue-router";
 import {userStore} from "../stores/user.ts";
@@ -38,8 +37,8 @@ const search = () => {
 
 const logout = () => {
   $http({
-    url: `/identify/logout`,
-    method: "get",
+    url: $http.adornUrl(`logout`),
+    method: "post",
   }).then((data: {
     data: any
   }) => {
@@ -65,8 +64,6 @@ const seeDetail = () => {
   router.push({path: '/home/content/historyImg'})
 }
 
-let user: User = JSON.parse(localStorage.getItem('user') as any).user
-
 
 const messageFromWebSocket = () => {
   socket.ws.onmessage = function (msg: any) {
@@ -77,7 +74,9 @@ const messageFromWebSocket = () => {
     } else if (res.type === 10) {   //心跳
       console.log(res.params.message)
     } else if (res.type === 5) {
-      if (Number(res.params.toUser.userId) === Number(UserStore.user?.userId)) {
+      if (Number(res.params.toUser.userId) === Number(UserStore.user?.userId)
+          && Number(SingleMessage.friendId) !== Number(res.params.fromUser.userId)
+      ) {
         ElNotification({
           title: "提示",
           message: `你有${res.params.fromUser.userName}的新消息`,
@@ -114,7 +113,7 @@ const messageFromWebSocket = () => {
 
 const addRedPoint = (userId, friendId) => {
   $http({
-    url: `/chat/blog/redis/redPoint/add/${userId}/${friendId}`,
+    url: $http.adornUrl(`blog/redis/redPoint/add/${userId}/${friendId}`),
     method: 'get'
   }).then(({data}) => {
     ReadStore.read = data.data
@@ -122,9 +121,9 @@ const addRedPoint = (userId, friendId) => {
   })
 }
 
-const addGroupRedPoint = (userId,groupId) => {
+const addGroupRedPoint = (userId, groupId) => {
   $http({
-    url: `/chat/blog/redis/redPoint/group/add/${userId}/${groupId}`,
+    url: $http.adornUrl(`blog/redis/redPoint/group/add/${userId}/${groupId}`),
     method: 'get'
   }).then(({data}) => {
     GroupReadStore.groupRead = data.data
@@ -136,7 +135,7 @@ const addGroupRedPoint = (userId,groupId) => {
 
 const getAllGroup = () => {
   $http({
-    url: `/chat/blog/group/getGroups/${UserStore.user?.userId}`,
+    url: $http.adornUrl(`blog/group/getGroups/${UserStore.user?.userId}`),
     method: 'get'
   }).then(({data}) => {
     console.log(data.data)
@@ -167,7 +166,11 @@ const sendCreateGroup = () => {
 
 
 onBeforeMount(() => {
-  socket.register(1)
+  if (UserStore.user !== null) {
+    socket.register(1)
+  } else {
+    socket.close()
+  }
   getAllGroup()
 })
 
@@ -176,7 +179,11 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  socket.register(0)
+  if (UserStore.user !== null) {
+    socket.register(0)
+  } else {
+    socket.close()
+  }
 })
 
 
@@ -184,13 +191,13 @@ onBeforeUnmount(() => {
 
 <template>
 
-  <div class="container">
+  <div class="home-container">
 
     <div class="header">
       <el-col :span="8">
         <div class="userDetail" style="display: flex">
           <el-dropdown>
-            <img v-bind:src="user?.userProfilePhoto" alt="">
+            <img v-bind:src="UserStore.user?.userProfilePhoto" alt="">
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="open">修改头像</el-dropdown-item>
@@ -200,9 +207,9 @@ onBeforeUnmount(() => {
             </template>
           </el-dropdown>
           <div style="padding-left: 20px;align-items: center">
-            <span style="font-weight: bold;font-size: 18px">昵称：{{ user?.userNickname }}</span><br>
-            <span style="font-weight: 100;color: #96969b">{{ user?.userName }}</span><br>
-            <span class="colorful">level：{{ user?.userLevel }}</span>
+            <span style="font-weight: bold;font-size: 18px">昵称：{{ UserStore.user?.userNickname }}</span><br>
+            <span style="font-weight: 100;color: #96969b">{{ UserStore.user?.userName }}</span><br>
+            <span class="colorful">level：{{ UserStore.user?.userLevel }}</span>
           </div>
         </div>
       </el-col>
@@ -280,7 +287,7 @@ onBeforeUnmount(() => {
 }
 
 
-.container {
+.home-container {
   height: 100%;
   width: 100%;
   background: #f8f8f8;

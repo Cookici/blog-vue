@@ -20,7 +20,7 @@ const groupName = ref('')
 
 const getFriends = () => {
   $http({
-    url: `/chat/blog/chat/friendList/${UserStore.user?.userId}`,
+    url: $http.adornUrl(`blog/chat/friendList/${UserStore.user?.userId}`),
     method: 'get'
   }).then(({data}: any) => {
     console.log(data)
@@ -53,7 +53,7 @@ const createGroup = () => {
     }
     groupUserIds.sort((a, b) => a - b)
     $http({
-      url: `/chat/blog/group/create`,
+      url: $http.adornUrl(`blog/group/create`),
       method: 'post',
       data: $http.adornData({groupId: groupId, groupName: groupName.value, ids: groupUserIds}, false, 'json')
     }).then(({data}) => {

@@ -33,7 +33,7 @@ let photos: Ref<Photo[]> = ref([])
 
 const getPhotos = () => {
   $http({
-    url: `/identify/blog/photo/getAllPhotos/${UserStore.user?.userId}`,
+    url: $http.adornUrl(`blog/photo/getAllPhotos/${UserStore.user?.userId}`),
     method: "get",
   }).then(({data}: { data: any }) => {
     photos.value = data.data
@@ -49,13 +49,13 @@ onMounted(() => {
 const loveBack = (userId, photo) => {
   ElMessageBox.confirm("是否更改为该头像", "提示", {}).then(() => {
     $http({
-      url: `/identify/blog/identify/goBackPhoto`,
+      url: $http.adornUrl(`blog/identify/goBackPhoto`),
       method: 'put',
       data: $http.adornData({id: userId, photoUrl: photo.photo}, false, 'json')
     }).then(({data}: { data: any }) => {
       if (data.data === 1) {
         $http({
-          url: `/identify/blog/identify/get/${UserStore.user?.userName}`,
+          url: $http.adornUrl(`blog/identify/get/${UserStore.user?.userName}`),
           method: "get",
         }).then(({data}: { data: any }) => {
           UserStore.setUser(data.data as User)

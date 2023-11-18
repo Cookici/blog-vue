@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
-import {getCurrentInstance, onMounted, reactive, Ref, ref, toRaw} from "vue";
+import {getCurrentInstance, onMounted, Ref, ref, toRaw} from "vue";
 import {useRouter} from "vue-router";
 import {Blog} from "../../models/blog.model.ts";
 import {pageStore} from "../../stores/page.ts";
@@ -14,6 +14,7 @@ let total = ref(0)
 let pageAll = ref(0)
 let blogsAndItsUser: Ref<Blog[]> = ref([])
 const sortList = ref([])
+const hotList = ref([])
 
 const handleCurrentChange = (val: number) => {
   PageStore.page = val
@@ -32,7 +33,7 @@ const articleDetail = (blog: Blog) => {
 
 const getPage = (sortId) => {
   $http({
-    url: `/article/blog/articles/getAll/${sortId}/${PageStore.page}`,
+    url: $http.adornUrl(`blog/articles/getAll/${sortId}/${PageStore.page}`),
     method: "get",
   }).then(({data}: { data: any }) => {
     console.log(data.data)
@@ -45,7 +46,7 @@ const getPage = (sortId) => {
 
 const getSortList = () => {
   $http({
-    url: `/article/article/sorts/getSortMenu`,
+    url: $http.adornUrl(`blog/sorts/getSortMenu`),
     method: "get",
   }).then(({data}: { data: any }) => {
     sortList.value = data.data
@@ -71,9 +72,20 @@ const changeHandler = (value: any) => {
   ElMessage.success(`你正在查看${PageStore.value}相关的文章`)
 }
 
+const getHotArticle = () => {
+  $http({
+    url: $http.adornUrl(`blog/articles/hotArticle`),
+    method: 'get'
+  }).then(({data}) => {
+    hotList.value = data.data
+    console.log("hotList", hotList.value)
+  })
+}
+
 onMounted(() => {
   getPage(PageStore.sortId === 0 ? "original" : PageStore.sortId)
   getSortList()
+  getHotArticle()
 })
 
 </script>
@@ -81,7 +93,7 @@ onMounted(() => {
 <template style="height: 100%">
 
   <div class="padding-class" style="height: 10%"></div>
-  <div class="content">
+  <div class="home-content">
     <el-row>
       <el-col :span="16">
         <div class="left-content-article">
@@ -130,6 +142,7 @@ onMounted(() => {
 
 
       <el-col :span="8">
+        <div class="right-content-container">
         <div class="article-sorts">
           <div class="sorts-introduce">
             <span style="font-weight: bolder;font-size: larger;color: #acbfd7">文章种类</span>
@@ -158,8 +171,31 @@ onMounted(() => {
         </div>
         <div class="hot-article">
           <div class="sorts-introduce">
-            <span style="font-weight: bolder;font-size: larger;color: #acbfd7">热门文章</span>
+            <span class="sort-title">热门文章Top5</span>
           </div>
+          <div class="blog-post" style="justify-items:center;text-align: center;width: 70%" v-for="blog in hotList"
+               :key="blog.articleId" @click="articleDetail(blog)">
+            <div class="author-info">
+              <img class="author-avatar" :src="blog.blogUsers.userProfilePhoto" alt="Author Avatar">
+              <div>
+                <span class="author-username">{{ blog.blogUsers.userNickname }}</span><br>
+                <span style="font-weight: 100;color: #96969b"> {{ blog.blogUsers.userName }}</span><br>
+                <span class="user-level colorful">level: {{ blog.blogUsers.userLevel }}</span>
+              </div>
+              <div class="post-time">{{ blog.articleDate.replace(new RegExp('T'), " ") }}</div>
+            </div>
+            <h2 class="article-title">{{ blog.articleTitle }}</h2>
+            <p class="article-content">{{ blog.articleContent.replace(/<[^>]+>/g, '').substring(0, 50) }}...</p>
+            <div class="article-stats">
+          <span>
+            <font-awesome-icon :icon="['fas', 'eye']"/>&nbsp;{{ blog.articleViews }}
+          </span>
+              <span>
+            <font-awesome-icon :icon="['fas', 'heart']" style="color: #fd2008;"/>&nbsp;{{ blog.articleLikeCount }}
+          </span>
+            </div>
+          </div>
+        </div>
         </div>
       </el-col>
     </el-row>
@@ -169,12 +205,29 @@ onMounted(() => {
 
 <style scoped>
 
-.hot-article{
-  height: 46%;
+.right-content-container{
+  min-height: 92.7%;
+  max-height: 92.7%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sort-title {
+  font-weight: bolder;
+  font-size: larger;
+  color: #acbfd7
+}
+
+.hot-article {
+  height: 600px;
+  width: 90%;
+  margin: 30px 30px 30px 5px;
   background-color: white;
+  text-align: center;
+  overflow-x: hidden;
+  overflow-y: auto;
   box-shadow: 2px 2px 30px rgba(0, 0, 0, 0.05);
   border-radius: 10px;
-  width: 90%;
 }
 
 .sorts-select {
@@ -215,13 +268,13 @@ onMounted(() => {
   width: 80%;
 }
 
-.content {
+.home-content {
   min-height: 100%;
   height: auto;
   width: 100%;
 }
 
-.left-content-article{
+.left-content-article {
   min-height: 80%;
   height: auto;
 }

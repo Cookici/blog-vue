@@ -85,13 +85,14 @@
 </template>
 
 <script setup lang="ts">
-import {computed, getCurrentInstance, reactive, ref} from 'vue'
+import {computed, ComputedRef, getCurrentInstance, reactive, ref} from 'vue'
 import {ElMessage, ElMessageBox, genFileId, UploadFile} from 'element-plus'
 import type {UploadInstance, UploadProps, UploadRawFile} from 'element-plus'
 import {policy} from "./policy.js";
 import {v4} from "uuid";
 import {userStore} from "../../stores/user.ts"
 import {User} from "../../models/user.model.ts";
+import http from "../../utils/axios.js";
 
 
 const imgLoad = (msg: string) => {
@@ -158,11 +159,11 @@ const close: () => void = () => {
   emit('update:dialogVisible', dialogVisible = !dialogVisible)
 }
 
-let canPointer = computed(() => {
+let canPointer: string = computed(() => {
   return props?.canPointer
 })
 
-let dialogVisible = computed(() => {
+let dialogVisible: boolean = computed(() => {
   return props?.dialogVisible
 })
 
@@ -251,7 +252,7 @@ const handleRemove = () => {
 
 const updatePhoto = () => {
   $http({
-    url: '/identify/blog/identify/updateUserPhoto',
+    url: http.adornUrl('blog/identify/updateUserPhoto'),
     method: 'put',
     data: $http.adornData({id: UserStore.user?.userId, photoUrl: uploadPhotoUrl.value}, false, 'json')
   }).then(({data}: { data: any }) => {

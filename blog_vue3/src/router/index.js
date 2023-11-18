@@ -81,7 +81,6 @@ router.beforeEach((to, from, next) => {
         &&
         (localStorage.getItem('token') === null || localStorage.getItem('token') === undefined)
     ) {
-        socket.close()
         if (to.name === 'Register') {
             next({name: 'Register'})
         }

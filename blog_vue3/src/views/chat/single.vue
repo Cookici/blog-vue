@@ -39,7 +39,7 @@ const sendMessage = () => {
   socket.send(data)
 
   $http({
-    url: `/chat/blog/chat/getFriend/${friend.userId}`,
+    url: $http.adornUrl(`blog/chat/getFriend/${friend.userId}`),
     method: 'get'
   }).then(({data}) => {
     console.log(data)
@@ -77,7 +77,7 @@ const appendText = (param) => {
 
 const getMessage = () => {
   $http({
-    url: `/chat/blog/redis/getFriendSingleMessage/${UserStore.user?.userId}/${friend.userId}`,
+    url: $http.adornUrl(`blog/redis/getFriendSingleMessage/${UserStore.user?.userId}/${friend.userId}`),
     method: 'get'
   }).then(({data}) => {
     console.log(data)
@@ -103,7 +103,6 @@ const getMessage = () => {
   })
 
 }
-
 
 
 onMounted(() => {
@@ -211,7 +210,8 @@ onMounted(() => {
   margin: 5px;
 }
 
-.avatar {
+
+.chat-container .avatar {
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -219,7 +219,7 @@ onMounted(() => {
   margin: 0 10px;
 }
 
-.message-bubble {
+.chat-container .message-bubble {
   max-width: 70%; /* Adjust as needed */
   padding: 8px;
   border-radius: 8px;
@@ -238,7 +238,6 @@ onMounted(() => {
 }
 
 :deep(.emoji-container) {
-
   height: 100%;
   align-items: center;
 }

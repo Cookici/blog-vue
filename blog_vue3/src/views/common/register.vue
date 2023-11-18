@@ -17,7 +17,7 @@ let blogUser = reactive({
   userNickname: '',
   userPassword: '',
   userEmail: '',
-  userProfilePhoto: 'https://lrh-blog-project.oss-cn-beijing.aliyuncs.com/%E5%93%88.jpg',
+  userProfilePhoto: 'https://lrh-blog-project.oss-cn-beijing.aliyuncs.com/defalut.jpg',
   userBirthday: '',
   userTelephoneNumber: '',
 })
@@ -61,7 +61,7 @@ const doRegister = () => {
       type: 'warning'
     }).then(() =>
         $http({
-          url: '/identify/blog/identify/register',
+          url: $http.adornUrl(`/blog/identify/register`),
           method: 'post',
           data: $http.adornData(blogUser, false)
         }).then(({data}: { data: any }) => {

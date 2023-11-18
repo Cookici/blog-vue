@@ -29,7 +29,7 @@ const addFriend = () => {
 
 const getUserDetail = () => {
   $http({
-    url: `/article/blog/articles/getUserDetail/${blogAndUser.blogUsers.userId}`,
+    url: $http.adornUrl(`blog/articles/getUserDetail/${blogAndUser.blogUsers.userId}`),
     method: "get",
   }).then(({data}: { data: any }) => {
     likes.value = data.data.like
@@ -65,7 +65,7 @@ const toLike = () => {
 
 const updateLike = () => {
   $http({
-    url: `/article/blog/articles/addLike/${blogAndUser.articleId}`,
+    url: $http.adornUrl(`blog/articles/addLike/${blogAndUser.articleId}`),
     method: "post",
   }).then(({data}: { data: any }) => {
     if (data.data === 1) {
@@ -90,7 +90,7 @@ const judgeLike = () => {
 
 const upDateView = () => {
   $http({
-    url: `/article/blog/articles/addView/${blogAndUser.articleId}`,
+    url: $http.adornUrl(`blog/articles/addView/${blogAndUser.articleId}`),
     method: "post",
   }).then(({data}: { data: any }) => {
     console.log(data.data)

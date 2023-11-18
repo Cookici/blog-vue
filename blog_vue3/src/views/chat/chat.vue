@@ -40,7 +40,7 @@ let offLineGroupMessage = reactive({})
 
 const toSearch = () => {
   $http({
-    url: `/identify/blog/identify/getByUserName/${searchId.value}`,
+    url: $http.adornUrl(`blog/identify/getByUserName/${searchId.value}`),
     method: 'get',
     data: $http.adornParams({}, false)
   }).then(({data}: any) => {
@@ -63,7 +63,7 @@ const judgeHaven = () => {
     return;
   }
   $http({
-    url: `/chat/blog/chat/${UserStore.user?.userId}/${searchId.value}`,
+    url: $http.adornUrl(`blog/chat/${UserStore.user?.userId}/${searchId.value}`),
     method: 'get',
   }).then(({data}: any) => {
     console.log(data)
@@ -79,7 +79,7 @@ const judgeHaven = () => {
 
 const getApply = () => {
   $http({
-    url: `/chat/blog/redis/get/apply/${UserStore.user?.userId}`,
+    url: $http.adornUrl(`blog/redis/get/apply/${UserStore.user?.userId}`),
     method: 'get',
     data: $http.adornParams({}, false)
   }).then(({data}: any) => {
@@ -102,7 +102,7 @@ const getApply = () => {
 const agree = (userId: number, friendId: number) => {
   ElMessageBox.confirm("是否添加该好友?", "提示", {}).then(() => {
     $http({
-      url: "/chat/blog/chat/agree",
+      url: $http.adornUrl(`blog/chat/agree`),
       method: 'post',
       data: $http.adornData({userId: userId, friendId: friendId}, false, 'json')
     }).then(({data}: any) => {
@@ -122,7 +122,7 @@ const agree = (userId: number, friendId: number) => {
 const reject = (userId: number, friendId: number) => {
   ElMessageBox.confirm("是否确定拒绝", "提示", {}).then(() => {
     $http({
-      url: "/chat/blog/chat/reject",
+      url: $http.adornUrl(`blog/chat/reject`),
       method: 'put',
       data: $http.adornData({userId: userId, friendId: friendId}, false, 'json')
     }).then(({data}: any) => {
@@ -149,7 +149,7 @@ const goSingleChat = (friend: any) => {
 
 const clearRedPoint = (friendId) => {
   $http({
-    url: "/chat/blog/redis/redPoint/clear",
+    url: $http.adornUrl(`blog/redis/redPoint/clear`),
     method: 'put',
     data: $http.adornData({userId: UserStore.user?.userId, friendId: friendId}, false, 'json')
   }).then(({data}) => {
@@ -160,7 +160,7 @@ const clearRedPoint = (friendId) => {
 
 const clearRedGroupPoint = (groupId) => {
   $http({
-    url: "/chat/blog/redis/redPoint/group/clear",
+    url: $http.adornUrl(`blog/redis/redPoint/group/clear`),
     method: 'put',
     data: $http.adornData({userId: UserStore.user?.userId, groupId: groupId}, false, 'json')
   }).then(({data}) => {
@@ -181,7 +181,7 @@ const wsAddFriend = (userId: any) => {
 
 const getFriends = () => {
   $http({
-    url: `/chat/blog/chat/friendList/${UserStore.user?.userId}`,
+    url: $http.adornUrl(`blog/chat/friendList/${UserStore.user?.userId}`),
     method: 'get'
   }).then(({data}: any) => {
     friendList = data.data
@@ -191,7 +191,7 @@ const getFriends = () => {
 
 const getOffLineMessage = () => {
   $http({
-    url: `/chat/blog/redis/getOffline/${UserStore.user?.userId}`,
+    url: $http.adornUrl(`blog/redis/getOffline/${UserStore.user?.userId}`),
     method: 'get'
   }).then(({data}) => {
     offLineMessage = data.data
@@ -214,7 +214,7 @@ const groupChat = (group, groupList) => {
 const getOffLineGroupMessage = () => {
 
   $http({
-    url: `/chat/blog/group/noReadGroupMessage/${UserStore.user?.userId}`,
+    url: $http.adornUrl(`blog/group/noReadGroupMessage/${UserStore.user?.userId}`),
     method: 'get'
   }).then(({data}) => {
     console.log("getOffLineGroupMessage ==> ", data.data)
@@ -226,7 +226,7 @@ const getOffLineGroupMessage = () => {
 
 const redPointExit = () => {
   $http({
-    url: `/chat/blog/redis/redPoint/exit/${UserStore.user?.userId}`,
+    url: $http.adornUrl(`blog/redis/redPoint/exit/${UserStore.user?.userId}`),
     method: 'get'
   }).then(({data}) => {
     ReadStore.read = data.data
@@ -237,7 +237,7 @@ const redPointExit = () => {
 
 const redPointGroupExit = () => {
   $http({
-    url: `/chat/blog/redis/redPoint/group/exit/${UserStore.user?.userId}`,
+    url: $http.adornUrl(`blog/redis/redPoint/group/exit/${UserStore.user?.userId}`),
     method: 'get'
   }).then(({data}) => {
     GroupReadStore.groupRead = data.data
