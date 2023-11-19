@@ -91,7 +91,7 @@ const init = {
   quickbars_insert_toolbar: 'quickimage quicktable',
   skin_url: '/skins/ui/oxide',
   content_css: '/skins/content/default/content.css',
-  min_height:450,
+  min_height: 450,
   image_caption: true,
   images_upload_handler: (blobInfo, progress) =>
       new Promise((resolve, reject) => {
@@ -162,6 +162,10 @@ const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 
 
 const submit = () => {
+  if(labelAndSort.length === 0){
+    ElMessage.error("标签和种类未选")
+    return;
+  }
   if (title.value === null || title.value === undefined || title.value === '') {
     ElMessage.error("标题不能为空")
     return;
@@ -173,9 +177,9 @@ const submit = () => {
     $http({
       url: $http.adornUrl(`blog/articles/create/${UserStore.user?.userId}`),
       method: "post",
-      data: $http.adornData({title: title.value, content: content.value}, false, 'json')
+      data: $http.adornData({title: title.value, content: content.value, labelId: labelAndSort[0], sortId: labelAndSort[2]}, false, 'json')
     }).then(({data}: { data: any }) => {
-      if (data.data === 1) {
+      if (data.data === 3) {
         ElMessage.success("发表成功")
         router.push({path: "/home/content"}).then(() => {
           nextTick(() => {
@@ -196,12 +200,68 @@ const clearContent = () => {
   }).catch(() => {
     ElMessage.success("取消成功")
   })
+}
 
+const labelList = ref([])
+
+const sortList = ref([])
+
+let labelAndSort = reactive([]);
+
+
+const getLabels = () => {
+  $http({
+    url: $http.adornUrl(`blog/label/getLabels`),
+    method: 'get'
+  }).then(({data}: any) => {
+    labelList.value = data.data
+    labelList.value = labelList.value.map(item => {
+      return {
+        sortId: item.labelId,
+        sortName: item.labelName,
+        sortAlias: item.labelAlias,
+        sortDescription: item.labelDescription
+      }
+    })
+    console.log("getLabels ==> ", labelList.value)
+    getSortList()
+  })
+}
+
+
+const getSortList = () => {
+  $http({
+    url: $http.adornUrl(`blog/sorts/getSortMenu`),
+    method: "get",
+  }).then(({data}: { data: any }) => {
+    sortList.value = data.data
+    console.log("getSortList ==> ", sortList.value)
+    for (let i = 0; i < labelList.value.length; i++) {
+      let children = {children: sortList.value}
+      let key = 'children'
+      labelList.value[i][key] = children.children;
+    }
+    console.log("labelList ==> ", labelList.value)
+  })
+}
+
+
+const labelAndSortHandle = (val: any) => {
+  labelAndSort = val
+  console.log("labelAndSortHandle --> ", labelAndSort)
+}
+
+
+const props = {
+  expandTrigger: 'hover' as const,
+  label: 'sortAlias',
+  value: 'sortId',
 }
 
 onMounted(() => {
   tinymce.init({}) // 初始化富文本
   ActiveIndexStore.activeIndex = '/home/subArticle'
+  getLabels()
 })
 
 
@@ -210,13 +270,26 @@ onMounted(() => {
 <template>
 
   <div class="padding" style="height: 10%"></div>
-  <div class="article-container">
-    <div>
-
-    </div>
+  <div class="sub-article-container">
     <el-container style="display: flex;flex-direction: column">
       <el-header style="flex: 1">
-        <div class="article-title">
+        <div class="article-cascader" style="padding-top: 25px;width: 100%">
+          <el-cascader
+              style="width: 100%"
+              v-model="labelAndSort"
+              :options="labelList"
+              :props="props"
+              popper-class="article-cascader-popper"
+              placeholder="选择标签和文章类型"
+              @change="labelAndSortHandle"
+          >
+            <template #default="{ node, data }">
+              <span>{{ data.sortName }}</span>
+              <span v-if="!node.isLeaf"> ({{ data.children.length }}) </span>
+            </template>
+          </el-cascader>
+        </div>
+        <div class="container-article-title">
           <el-input
               style="padding-top: 25px;"
               v-model="title"
@@ -259,8 +332,8 @@ onMounted(() => {
 
 </template>
 
-<style scoped>
-.article-container {
+<style>
+.sub-article-container {
   height: auto;
   min-height: 500px;
   width: 90%;
@@ -269,6 +342,20 @@ onMounted(() => {
   align-items: center;
   border-radius: 10px;
   margin: 20px auto;
+}
+
+
+.article-cascader-popper {
+  width: 85%;
+  display: flex
+}
+
+.el-cascader-panel {
+  width: 100%;
+}
+
+.el-scrollbar {
+  flex: 1;
 }
 
 

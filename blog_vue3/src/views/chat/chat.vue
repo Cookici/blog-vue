@@ -184,8 +184,10 @@ const getFriends = () => {
     url: $http.adornUrl(`blog/chat/friendList/${UserStore.user?.userId}`),
     method: 'get'
   }).then(({data}: any) => {
-    friendList = data.data
-    friendListSize.value = friendList.length
+    if (data.data !== undefined) {
+      friendList = data.data
+      friendListSize.value = friendList.length
+    }
   })
 }
 

@@ -9,4 +9,23 @@ export interface Blog {
     articleTitle: string;
     articleViews: number;
     blogUsers: User;
+    blogLabels:BlogLabels;
+    blogSorts:BlogSorts
+}
+
+
+interface BlogLabels {
+    labelAlias: string,
+    labelDescription: string
+    labelId: number
+    labelName: string
+}
+
+
+interface BlogSorts{
+    parentSortId: number
+    sortAlias: string
+    sortDescription: string
+    sortId: number
+    sortName: string
 }

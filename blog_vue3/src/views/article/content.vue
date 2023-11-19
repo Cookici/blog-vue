@@ -105,6 +105,8 @@ onMounted(() => {
                 <span style="font-weight: 100;color: #96969b"> {{ blog.blogUsers.userName }}</span><br>
                 <span class="user-level colorful">level: {{ blog.blogUsers.userLevel }}</span>
               </div>
+              <div class="article-label" style="margin-left: 50px"><font-awesome-icon :icon=blog.blogLabels.labelAlias />&nbsp;{{blog.blogLabels.labelName}}</div>
+              <div class="article-sort-label" style="margin-left: 50px"><font-awesome-icon :icon="['far', 'bookmark']" />&nbsp;{{blog.blogSorts.sortAlias}}</div>
               <div class="post-time">{{ blog.articleDate.replace(new RegExp('T'), " ") }}</div>
             </div>
             <h2 class="article-title">{{ blog.articleTitle }}</h2>
@@ -121,81 +123,75 @@ onMounted(() => {
         </div>
 
         <div class="demo-pagination-block">
-          <el-row>
-            <el-col :span="8"></el-col>
-            <el-col :span="8">
-              <el-pagination
-                  style=" margin: 30px 30px 30px 40px;"
-                  v-model:current-page="PageStore.page"
-                  v-model:page-count="pageAll"
-                  :small="false"
-                  background layout="prev, pager, next, jumper"
-                  :total="total"
-                  :pager-count="5"
-                  @current-change="handleCurrentChange"
-              />
-            </el-col>
-            <el-col :span="8"></el-col>
-          </el-row>
+          <el-pagination
+              style="margin: 30px 30px 30px 40px;justify-content: center;"
+              v-model:current-page="PageStore.page"
+              v-model:page-count="pageAll"
+              :small="false"
+              background layout="prev, pager, next, jumper"
+              :total="total"
+              :pager-count="5"
+              @current-change="handleCurrentChange"
+          />
         </div>
       </el-col>
 
 
       <el-col :span="8">
         <div class="right-content-container">
-        <div class="article-sorts">
-          <div class="sorts-introduce">
-            <span style="font-weight: bolder;font-size: larger;color: #acbfd7">文章种类</span>
-          </div>
-          <el-select class="sorts-select" v-model="PageStore.value"
-                     placeholder="选择种类" placement="bottom"
-                     @change="changeHandler"
-          >
-            <el-option-group
-                v-for="sort in sortList"
-                :key="sort.sortId"
-                :label="sort.sortName"
-            >
-              <el-option
-                  v-for="item in sort.children"
-                  :key="item.sortId"
-                  :label="item.sortName"
-                  :value="item.sortName"
-                  @click="changeSelect(item.sortId)"
-              />
-            </el-option-group>
-          </el-select>
-          <div>
-            <el-button type="primary" @click="clearSelect" style="width: 90%">还原</el-button>
-          </div>
-        </div>
-        <div class="hot-article">
-          <div class="sorts-introduce">
-            <span class="sort-title">热门文章Top5</span>
-          </div>
-          <div class="blog-post" style="justify-items:center;text-align: center;width: 70%" v-for="blog in hotList"
-               :key="blog.articleId" @click="articleDetail(blog)">
-            <div class="author-info">
-              <img class="author-avatar" :src="blog.blogUsers.userProfilePhoto" alt="Author Avatar">
-              <div>
-                <span class="author-username">{{ blog.blogUsers.userNickname }}</span><br>
-                <span style="font-weight: 100;color: #96969b"> {{ blog.blogUsers.userName }}</span><br>
-                <span class="user-level colorful">level: {{ blog.blogUsers.userLevel }}</span>
-              </div>
-              <div class="post-time">{{ blog.articleDate.replace(new RegExp('T'), " ") }}</div>
+          <div class="article-sorts">
+            <div class="sorts-introduce">
+              <span style="font-weight: bolder;font-size: larger;color: #acbfd7">文章种类</span>
             </div>
-            <h2 class="article-title">{{ blog.articleTitle }}</h2>
-            <p class="article-content">{{ blog.articleContent.replace(/<[^>]+>/g, '').substring(0, 50) }}...</p>
-            <div class="article-stats">
+            <el-select class="sorts-select" v-model="PageStore.value"
+                       placeholder="选择种类" placement="bottom"
+                       @change="changeHandler"
+            >
+              <el-option-group
+                  v-for="sort in sortList"
+                  :key="sort.sortId"
+                  :label="sort.sortName"
+              >
+                <el-option
+                    v-for="item in sort.children"
+                    :key="item.sortId"
+                    :label="item.sortName"
+                    :value="item.sortName"
+                    @click="changeSelect(item.sortId)"
+                />
+              </el-option-group>
+            </el-select>
+            <div>
+              <el-button type="primary" @click="clearSelect" style="width: 90%">还原</el-button>
+            </div>
+          </div>
+          <div class="hot-article">
+            <div class="sorts-introduce">
+              <span class="sort-title">热门文章Top5</span>
+            </div>
+            <div class="blog-post" style="justify-items:center;text-align: center;width: 70%" v-for="blog in hotList"
+                 :key="blog.articleId" @click="articleDetail(blog)">
+              <div class="author-info">
+                <img class="author-avatar" :src="blog.blogUsers.userProfilePhoto" alt="Author Avatar">
+                <div>
+                  <span class="author-username">{{ blog.blogUsers.userNickname }}</span><br>
+                  <span style="font-weight: 100;color: #96969b"> {{ blog.blogUsers.userName }}</span><br>
+                  <span class="user-level colorful">level: {{ blog.blogUsers.userLevel }}</span>
+                </div>
+                <div class="post-time">{{ blog.articleDate.replace(new RegExp('T'), " ") }}</div>
+              </div>
+              <h2 class="article-title">{{ blog.articleTitle }}</h2>
+              <p class="article-content">{{ blog.articleContent.replace(/<[^>]+>/g, '').substring(0, 50) }}...</p>
+              <div class="article-stats">
           <span>
             <font-awesome-icon :icon="['fas', 'eye']"/>&nbsp;{{ blog.articleViews }}
           </span>
-              <span>
+                <span>
             <font-awesome-icon :icon="['fas', 'heart']" style="color: #fd2008;"/>&nbsp;{{ blog.articleLikeCount }}
           </span>
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </el-col>
     </el-row>
@@ -205,9 +201,9 @@ onMounted(() => {
 
 <style scoped>
 
-.right-content-container{
-  min-height: 92.7%;
-  max-height: 92.7%;
+.right-content-container {
+  min-height: 95%;
+  max-height: 95%;
   display: flex;
   flex-direction: column;
 }
@@ -219,7 +215,7 @@ onMounted(() => {
 }
 
 .hot-article {
-  height: 600px;
+  height: 590px;
   width: 90%;
   margin: 30px 30px 30px 5px;
   background-color: white;
@@ -265,7 +261,7 @@ onMounted(() => {
 }
 
 .demo-pagination-block {
-  width: 80%;
+  width: 100%;
 }
 
 .home-content {
