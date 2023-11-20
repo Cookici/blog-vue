@@ -25,15 +25,7 @@ const GroupMessage = groupMessage()
 const GroupReadStore = groupReadStore()
 
 
-let keyword = ref('')
 let dialogVisible = ref(false)
-
-const search = () => {
-  if (keyword.value !== '') {
-    console.log("search ok")
-  }
-}
-
 
 const logout = () => {
   $http({
@@ -87,7 +79,7 @@ const messageFromWebSocket = () => {
           (Number(res.params.toUser.userId) === Number(UserStore.user?.userId) && Number(res.params.fromUser.userId) === Number(SingleMessage.friendId))
           || (Number(res.params.fromUser.userId) === Number(UserStore.user?.userId) && Number(res.params.toUser.userId) === Number(SingleMessage.friendId))
       ) {
-        SingleMessage.receiveMessage.push(res.params)
+        SingleMessage.receiveMessage.push(res.params as any)
         bus.emit('receiveMessageScroll', {flag: true})
       } else {
         if (Number(res.params.toUser.userId) === Number(UserStore.user?.userId)) {
@@ -97,7 +89,7 @@ const messageFromWebSocket = () => {
     } else if (res.type === 7) {
       if (Number(res.params.groupId) === Number(GroupMessage.groupId)) {
         console.log(res.params)
-        GroupMessage.receiveGroupMessage.push(res.params)
+        GroupMessage.receiveGroupMessage.push(res.params as any)
         bus.emit('receiveMessageScroll', {flag: true})
       } else {
         ElNotification({
@@ -111,21 +103,21 @@ const messageFromWebSocket = () => {
   }
 }
 
-const addRedPoint = (userId, friendId) => {
+const addRedPoint = (userId : any, friendId : any) => {
   $http({
     url: $http.adornUrl(`blog/redis/redPoint/add/${userId}/${friendId}`),
     method: 'get'
-  }).then(({data}) => {
+  }).then(({data} : any) => {
     ReadStore.read = data.data
     console.log("ReadStore:", ReadStore.read)
   })
 }
 
-const addGroupRedPoint = (userId, groupId) => {
+const addGroupRedPoint = (userId : any, groupId : any) => {
   $http({
     url: $http.adornUrl(`blog/redis/redPoint/group/add/${userId}/${groupId}`),
     method: 'get'
-  }).then(({data}) => {
+  }).then(({data} : any) => {
     GroupReadStore.groupRead = data.data
     console.log("GroupReadStore:", data.data)
   })
@@ -137,7 +129,7 @@ const getAllGroup = () => {
   $http({
     url: $http.adornUrl(`blog/group/getGroups/${UserStore.user?.userId}`),
     method: 'get'
-  }).then(({data}) => {
+  }).then(({data} : any) => {
     console.log(data.data)
     GroupListStore.groupList = data.data.groups
     GroupListStore.groupListSize = data.data.groupsSize
@@ -194,7 +186,7 @@ onBeforeUnmount(() => {
   <div class="home-container">
 
     <div class="header">
-      <el-col :span="8">
+      <el-col :span="14">
         <div class="userDetail" style="display: flex">
           <el-dropdown>
             <img v-bind:src="UserStore.user?.userProfilePhoto" alt="">
@@ -214,30 +206,8 @@ onBeforeUnmount(() => {
         </div>
       </el-col>
 
-      <el-col :span="8">
-        <div style="display: flex;align-items: center;">
-          <el-input
-              v-model="keyword"
-              placeholder="请输入你要搜索的文章"
-              prefix-icon="el-icon-search"
-              style="width: 60%;padding: 5px;text-align: left"
-              clearable
-              @clear="search"
-              @keydown.enter.native="search"></el-input>
-          <el-button
-              type="primary"
-              @click="search"
-              style="width: 75px;margin: 10px"
-          >
-            <el-icon style="margin-right:3px">
-              <Search/>
-            </el-icon>
-            搜索
-          </el-button>
-        </div>
-      </el-col>
 
-      <el-col :span="8" style="height: 100%">
+      <el-col :span="10" style="height: 100%">
         <div class="nav">
           <el-menu
               :default-active="ActiveIndexStore.activeIndex"

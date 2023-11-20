@@ -5,11 +5,11 @@ export const activeIndexStore = defineStore('activeIndex', {
 
     state: () => {
         return {
-            activeIndex : '/home/content'
+            activeIndex: '/home/content',
         }
     },
     actions: {
-        setActiveIndex(activeIndex: string){
+        setActiveIndex(activeIndex: string) {
             this.activeIndex = activeIndex
         },
     }

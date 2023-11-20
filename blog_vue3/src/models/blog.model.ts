@@ -14,7 +14,7 @@ export interface Blog {
 }
 
 
-interface BlogLabels {
+export interface BlogLabels {
     labelAlias: string,
     labelDescription: string
     labelId: number
@@ -22,7 +22,7 @@ interface BlogLabels {
 }
 
 
-interface BlogSorts{
+export interface BlogSorts{
     parentSortId: number
     sortAlias: string
     sortDescription: string

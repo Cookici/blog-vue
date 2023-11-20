@@ -12,6 +12,7 @@ import {groupListStore} from "../../stores/groupList.ts";
 import {groupMessage} from "../../stores/groupMessage.ts";
 import {groupReadStore} from "../../stores/groupRead.ts";
 import {User} from "../../models/user.model.ts";
+import {ChatRound, House, Plus, Star} from "@element-plus/icons-vue";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 
@@ -147,24 +148,24 @@ const goSingleChat = (friend: any) => {
   router.push({path: '/home/chat/single', query: {friendId: friend.userId}, state: {friend}})
 }
 
-const clearRedPoint = (friendId) => {
+const clearRedPoint = (friendId : any) => {
   $http({
     url: $http.adornUrl(`blog/redis/redPoint/clear`),
     method: 'put',
     data: $http.adornData({userId: UserStore.user?.userId, friendId: friendId}, false, 'json')
-  }).then(({data}) => {
+  }).then(({data}: any) => {
     console.log(data.data)
-    ReadStore.read[friendId] = 0
+    ReadStore.read[friendId]  = 0
   })
 }
 
-const clearRedGroupPoint = (groupId) => {
+const clearRedGroupPoint = (groupId: any) => {
   $http({
     url: $http.adornUrl(`blog/redis/redPoint/group/clear`),
     method: 'put',
     data: $http.adornData({userId: UserStore.user?.userId, groupId: groupId}, false, 'json')
-  }).then(({data}) => {
-    GroupReadStore.groupRead[groupId] = 0
+  }).then(({data}: any) => {
+    GroupReadStore.groupRead[groupId]  = 0
     console.log(data.data)
   })
 }
@@ -195,7 +196,7 @@ const getOffLineMessage = () => {
   $http({
     url: $http.adornUrl(`blog/redis/getOffline/${UserStore.user?.userId}`),
     method: 'get'
-  }).then(({data}) => {
+  }).then(({data}: any) => {
     offLineMessage = data.data
   })
 }
@@ -204,10 +205,10 @@ onBeforeMount(() => {
   SingleMessage.friendId = ''
 })
 
-const groupChat = (group, groupList) => {
+const groupChat = (group: any, groupList: any) => {
   GroupMessage.receiveGroupMessage = []
   GroupMessage.groupId = ''
-  offLineGroupMessage[Number(group.blogGroup.groupId)] = 0
+  offLineGroupMessage[Number(group.blogGroup.groupId)]  = 0
   clearRedGroupPoint(group.blogGroup.groupId)
   router.push({path: '/home/chat/group', query: {groupId: group.blogGroup.groupId}, state: {groupList}})
 }
@@ -218,7 +219,7 @@ const getOffLineGroupMessage = () => {
   $http({
     url: $http.adornUrl(`blog/group/noReadGroupMessage/${UserStore.user?.userId}`),
     method: 'get'
-  }).then(({data}) => {
+  }).then(({data} : any) => {
     console.log("getOffLineGroupMessage ==> ", data.data)
     offLineGroupMessage = data.data
   })
@@ -230,7 +231,7 @@ const redPointExit = () => {
   $http({
     url: $http.adornUrl(`blog/redis/redPoint/exit/${UserStore.user?.userId}`),
     method: 'get'
-  }).then(({data}) => {
+  }).then(({data} : any) => {
     ReadStore.read = data.data
     console.log("redPointExit", ReadStore.read)
   })
@@ -241,7 +242,7 @@ const redPointGroupExit = () => {
   $http({
     url: $http.adornUrl(`blog/redis/redPoint/group/exit/${UserStore.user?.userId}`),
     method: 'get'
-  }).then(({data}) => {
+  }).then(({data} : any) => {
     GroupReadStore.groupRead = data.data
     console.log("GroupReadStore", GroupReadStore.groupRead)
   })
@@ -253,7 +254,7 @@ const createGroup = () => {
 
 
 //计算头像布局
-const computedAvatar = (avatarList) => {
+const computedAvatar = (avatarList : any) => {
   if (avatarList.length > 4) {
     return "avatarItem--3"
   } else if (avatarList.length > 1) {
@@ -266,6 +267,7 @@ const computedAvatar = (avatarList) => {
 const goChatHome = () => {
   router.push({path: '/home/chat'})
 }
+
 
 onMounted(() => {
   ActiveIndexStore.activeIndex = '/home/chat'
@@ -288,8 +290,7 @@ onMounted(() => {
 
         <el-menu class="el-menu-vertical-demo">
 
-
-          <el-menu-item index="1" @click="goChatHome">
+          <el-menu-item index="chatHome" @click="goChatHome">
             <template #title>
               <el-icon>
                 <House/>
@@ -299,7 +300,7 @@ onMounted(() => {
           </el-menu-item>
 
 
-          <el-menu-item index="2" @click="createGroup">
+          <el-menu-item index="createGroup" @click="createGroup">
             <template #title>
               <el-icon>
                 <Plus/>
@@ -309,7 +310,7 @@ onMounted(() => {
           </el-menu-item>
 
 
-          <el-sub-menu index="3">
+          <el-sub-menu index="myFriends">
             <template #title>
               <el-icon>
                 <ChatRound/>
@@ -336,13 +337,13 @@ onMounted(() => {
                       <div style="position: absolute;right: 0;top: -10px;font-weight: 100;color: red">
                         <span>
                         {{
-                            ReadStore.read[Number(friend.userId)] === null || ReadStore.read[Number(friend.userId)] === undefined || ReadStore.read[Number(friend.userId)] === 0 ? '' : "未读：" + ReadStore.read[Number(friend.userId)]
+                            ReadStore.read[Number(friend.userId)]  === null || ReadStore.read[Number(friend.userId)]  === undefined || ReadStore.read[Number(friend.userId)]  === 0 ? '' : "未读：" + ReadStore.read[Number(friend.userId)]
                           }}
                           </span>
                         &nbsp;
                         <span>
                         {{
-                            offLineMessage[Number(friend.userId)] === 0 || offLineMessage[Number(friend.userId)] === null || offLineMessage[Number(friend.userId)] === undefined ? '' : "离线：" + offLineMessage[Number(friend.userId)]
+                            offLineMessage[Number(friend.userId)]  === 0 || offLineMessage[Number(friend.userId)] === null || offLineMessage[Number(friend.userId)] === undefined ? '' : "离线：" + offLineMessage[Number(friend.userId)]
                           }}
                           </span>
                       </div>
@@ -354,7 +355,7 @@ onMounted(() => {
           </el-sub-menu>
 
 
-          <el-sub-menu index="4">
+          <el-sub-menu index="Groups">
             <template #title>
               <el-icon>
                 <ChatDotRound/>
@@ -386,13 +387,13 @@ onMounted(() => {
                       <div style="position: absolute;right: 0;top: -10px;font-weight: 100;color: red">
                         <span>
                         {{
-                            GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === null || GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === undefined || GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === 0 ? '' : "未读：" + GroupReadStore.groupRead[Number(group.blogGroup.groupId)]
+                            GroupReadStore.groupRead[Number(group.blogGroup.groupId)]  === null || GroupReadStore.groupRead[Number(group.blogGroup.groupId)]  === undefined || GroupReadStore.groupRead[Number(group.blogGroup.groupId)]  === 0 ? '' : "未读：" + GroupReadStore.groupRead[Number(group.blogGroup.groupId)]
                           }}
                         </span>
                         &nbsp;
                         <span>
                         {{
-                            offLineGroupMessage[Number(group.blogGroup.groupId)] === 0 || offLineGroupMessage[Number(group.blogGroup.groupId)] === null || offLineGroupMessage[Number(group.blogGroup.groupId)] === undefined ? '' : "离线：" + offLineGroupMessage[Number(group.blogGroup.groupId)]
+                            offLineGroupMessage[Number(group.blogGroup.groupId)]  === 0 || offLineGroupMessage[Number(group.blogGroup.groupId)]  === null || offLineGroupMessage[Number(group.blogGroup.groupId)]  === undefined ? '' : "离线：" + offLineGroupMessage[Number(group.blogGroup.groupId)]
                           }}
                           </span>
                       </div>
@@ -404,7 +405,7 @@ onMounted(() => {
           </el-sub-menu>
 
 
-          <el-sub-menu index="5">
+          <el-sub-menu index="friendApply">
             <template #title>
               <el-icon>
                 <Star/>

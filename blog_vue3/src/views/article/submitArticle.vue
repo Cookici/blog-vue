@@ -45,6 +45,7 @@ import {policy} from "../../components/upload/policy.js";
 import {v4} from "uuid";
 import axios from "axios";
 import {activeIndexStore} from "../../stores/activeIndex.ts";
+import {BlogLabels} from "../../models/blog.model.ts";
 // import 'tinymce/plugins/imagetools'; //存在bug
 
 const UserStore = userStore()
@@ -62,7 +63,7 @@ const oss = reactive({
 
 const getPolicy = () => {
   return new Promise((resolve, reject) => {
-    policy(UserStore.user?.userName).then(response => {
+    policy(UserStore.user?.userName).then((response: any) => {
       oss.policy = response.data.policy;
       oss.signature = response.data.signature;
       oss.ossaccessKeyId = response.data.accessid;
@@ -71,6 +72,7 @@ const getPolicy = () => {
       oss.host = response.data.host;
       resolve(true)
     }).catch((err: any) => {
+      console.log(err)
       reject(false)
     })
   })
@@ -93,7 +95,7 @@ const init = {
   content_css: '/skins/content/default/content.css',
   min_height: 450,
   image_caption: true,
-  images_upload_handler: (blobInfo, progress) =>
+  images_upload_handler: (blobInfo: any, progress: any) =>
       new Promise((resolve, reject) => {
         getPolicy().then(() => {
           let filename = blobInfo.filename()
@@ -110,8 +112,10 @@ const init = {
           let headers = {
             "Content-Type": "multipart/form-data",
           }
-          axios.post("https://lrh-blog-project.oss-cn-beijing.aliyuncs.com", formData, headers).then(response => {
+          axios.post("https://lrh-blog-project.oss-cn-beijing.aliyuncs.com", formData, headers as any).then((response: any) => {
             resolve(`https://lrh-blog-project.oss-cn-beijing.aliyuncs.com/${oss.key}.${suffix}`)
+            console.log(progress)
+            console.log(response)
             ElMessage.success("上传成功")
           }).catch((error) => {
             reject(error)
@@ -162,7 +166,7 @@ const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 
 
 const submit = () => {
-  if(labelAndSort.length === 0){
+  if (labelAndSort.length === 0) {
     ElMessage.error("标签和种类未选")
     return;
   }
@@ -202,7 +206,7 @@ const clearContent = () => {
   })
 }
 
-const labelList = ref([])
+const labelList = ref([] as any[])
 
 const sortList = ref([])
 
@@ -215,14 +219,14 @@ const getLabels = () => {
     method: 'get'
   }).then(({data}: any) => {
     labelList.value = data.data
-    labelList.value = labelList.value.map(item => {
+    labelList.value  = labelList.value.map((item: BlogLabels) => {
       return {
-        sortId: item.labelId,
-        sortName: item.labelName,
-        sortAlias: item.labelAlias,
-        sortDescription: item.labelDescription
+        sortId: item.labelId as number,
+        sortName: item.labelName as string,
+        sortAlias: item.labelAlias as string,
+        sortDescription: item.labelDescription as string
       }
-    })
+    }) as any
     console.log("getLabels ==> ", labelList.value)
     getSortList()
   })
@@ -239,7 +243,7 @@ const getSortList = () => {
     for (let i = 0; i < labelList.value.length; i++) {
       let children = {children: sortList.value}
       let key = 'children'
-      labelList.value[i][key] = children.children;
+      labelList.value[i][key]= children.children ;
     }
     console.log("labelList ==> ", labelList.value)
   })
@@ -254,7 +258,7 @@ const labelAndSortHandle = (val: any) => {
 
 const props = {
   expandTrigger: 'hover' as const,
-  label: 'sortAlias',
+  label: 'sortName',
   value: 'sortId',
 }
 

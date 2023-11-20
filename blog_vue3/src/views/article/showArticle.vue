@@ -31,17 +31,17 @@ const getUserDetail = () => {
   $http({
     url: $http.adornUrl(`blog/articles/getUserDetail/${blogAndUser.blogUsers.userId}`),
     method: "get",
-  }).then(({data}: { data: any }) => {
+  }).then(({data}: any) => {
     likes.value = data.data.like
     views.value = data.data.views
     articleNumber.value = data.data.articleNumber
-    articleList.value = data.data.articleList
-    document.getElementById('article-content').innerHTML = blogAndUser.articleContent
+    articleList.value = data.data.articleList as any
+    (document.getElementById('article-content') as any).innerHTML = blogAndUser.articleContent
   })
 
 }
 
-const articleDetail = (blog: Blog) => {
+const articleDetail = (blog: any) => {
   blog = toRaw(blog)
   blog.blogUsers = toRaw(blogAndUser.blogUsers)
   router.replace({path: '/home/content/showArticle', query: {id: blog.articleId}, state: {blog}})
@@ -146,8 +146,9 @@ onMounted(() => {
 
       <h2 style="color: #718da6">他其他的文章</h2>
 
-      <div class="blog-card" v-for="article  in articleList.slice(0,5)" :key="article.articleId"
-           @click="articleDetail(article)" v-show="parseInt(article.articleId) !== parseInt(<string>currentBlogId)">
+      <div class="blog-card" v-for="article  in (articleList as Blog[]).slice(0,5)" :key="article.articleId"
+           @click="articleDetail(article)"
+           v-show="parseInt(String(article.articleId)) !== parseInt(<string>currentBlogId)">
         <div class="blog-name">
           {{ article.articleTitle }}
         </div>

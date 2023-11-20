@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, getCurrentInstance, ref, reactive, toRaw, nextTick} from "vue";
+import {onMounted, getCurrentInstance, ref, reactive, toRaw, nextTick, Ref, UnwrapRef} from "vue";
 import {userStore} from "../../stores/user.ts";
 import {User} from "../../models/user.model.ts";
 import {ElMessage, ElMessageBox, ElTable} from "element-plus";
@@ -11,10 +11,10 @@ const UserStore = userStore()
 const multipleTableRef = ref<InstanceType<typeof ElTable>>()
 const multipleSelection = ref<User[]>([])
 
-const disabled: boolean = ref(true)
+const disabled: Ref<UnwrapRef<boolean>> = ref(true)
 
 const groupUserIds: number[] = reactive([])
-const friendList: User[] = ref([])
+const friendList: Ref<UnwrapRef<any[]>> = ref([])
 
 const groupName = ref('')
 
@@ -43,20 +43,20 @@ const createGroup = () => {
     return
   }
   ElMessageBox.confirm(`是否创建群聊${groupName.value}`, "提示", {}).then(() => {
-    groupUserIds.push(UserStore.user?.userId)
+    groupUserIds.push(UserStore.user?.userId as any)
     let groupId = v4();
     groupId = groupId.replace(/[a-zA-Z]+/g, "")
     groupId = groupId.replace(/-+/g, '')
     groupId = groupId.substring(0, 6)
     for (let i = 0; i < toRaw(multipleSelection.value).length; i++) {
-      groupUserIds.push(multipleSelection.value[i].userId)
+      groupUserIds.push(multipleSelection.value[i].userId as any)
     }
     groupUserIds.sort((a, b) => a - b)
     $http({
       url: $http.adornUrl(`blog/group/create`),
       method: 'post',
       data: $http.adornData({groupId: groupId, groupName: groupName.value, ids: groupUserIds}, false, 'json')
-    }).then(({data}) => {
+    }).then(({data} : any) => {
       if (data.data === true) {
         ElMessage.success("创建成功")
         nextTick(() => {

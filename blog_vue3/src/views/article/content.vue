@@ -5,6 +5,8 @@ import {useRouter} from "vue-router";
 import {Blog} from "../../models/blog.model.ts";
 import {pageStore} from "../../stores/page.ts";
 import {ElMessage} from "element-plus";
+import {Delete, Search} from "@element-plus/icons-vue";
+import {SortModel} from "../../models/sort.model.ts";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 const router = useRouter()
@@ -25,15 +27,15 @@ const handleCurrentChange = (val: number) => {
   getPage(PageStore.sortId)
 }
 
-const articleDetail = (blog: Blog) => {
+const articleDetail = (blog: any) => {
   blog = toRaw(blog)
   router.push({path: '/home/content/showArticle', query: {id: blog.articleId}, state: {blog}})
 }
 
 
-const getPage = (sortId) => {
+const getPage = (sortId: any) => {
   $http({
-    url: $http.adornUrl(`blog/articles/getAll/${sortId}/${PageStore.page}`),
+    url: $http.adornUrl(`blog/articles/getAll/${sortId}/${PageStore.page}?item=${PageStore.keyword}`),
     method: "get",
   }).then(({data}: { data: any }) => {
     console.log(data.data)
@@ -41,6 +43,7 @@ const getPage = (sortId) => {
     total.value = data.data.total
     pageAll.value = data.data.pageAll
   })
+
 }
 
 
@@ -76,13 +79,23 @@ const getHotArticle = () => {
   $http({
     url: $http.adornUrl(`blog/articles/hotArticle`),
     method: 'get'
-  }).then(({data}) => {
+  }).then(({data} : any) => {
     hotList.value = data.data
     console.log("hotList", hotList.value)
   })
 }
 
+const search = () => {
+  getPage(PageStore.sortId)
+}
+
+const deleteKeyword = () =>{
+  PageStore.keyword = ''
+  getPage(PageStore.sortId)
+}
+
 onMounted(() => {
+  PageStore.keyword = ''
   getPage(PageStore.sortId === 0 ? "original" : PageStore.sortId)
   getSortList()
   getHotArticle()
@@ -94,6 +107,37 @@ onMounted(() => {
 
   <div class="padding-class" style="height: 10%"></div>
   <div class="home-content">
+    <div style="width: 100%;text-align: center;padding-top: 20px">
+      <el-input
+          v-model="PageStore.keyword"
+          placeholder="请输入你要搜索的文章"
+          prefix-icon="el-icon-search"
+          style="width: 70%;text-align: left"
+          clearable
+          @clear="search"
+          @keydown.enter.native="search">
+      </el-input>
+      <el-button
+          type="primary"
+          @click="search"
+          style="width: 75px;margin: 10px 10px 10px 15px;"
+      >
+        <el-icon style="margin-right:3px">
+          <Search/>
+        </el-icon>
+        搜索
+      </el-button>
+      <el-button
+          type="primary"
+          @click="deleteKeyword"
+          style="width: 75px;margin: 10px"
+      >
+        <el-icon style="margin-right:3px">
+          <Delete/>
+        </el-icon>
+        清空
+      </el-button>
+    </div>
     <el-row>
       <el-col :span="16">
         <div class="left-content-article">
@@ -105,12 +149,18 @@ onMounted(() => {
                 <span style="font-weight: 100;color: #96969b"> {{ blog.blogUsers.userName }}</span><br>
                 <span class="user-level colorful">level: {{ blog.blogUsers.userLevel }}</span>
               </div>
-              <div class="article-label" style="margin-left: 50px"><font-awesome-icon :icon=blog.blogLabels.labelAlias />&nbsp;{{blog.blogLabels.labelName}}</div>
-              <div class="article-sort-label" style="margin-left: 50px"><font-awesome-icon :icon="['far', 'bookmark']" />&nbsp;{{blog.blogSorts.sortAlias}}</div>
+              <div class="article-label" style="margin-left: 50px">
+                <font-awesome-icon :icon=blog.blogLabels.labelAlias />&nbsp;{{ blog.blogLabels.labelName }}
+              </div>
+              <div class="article-sort-label" style="margin-left: 50px">
+                <font-awesome-icon :icon="['far', 'bookmark']"/>&nbsp;{{ blog.blogSorts.sortAlias }}
+              </div>
               <div class="post-time">{{ blog.articleDate.replace(new RegExp('T'), " ") }}</div>
             </div>
             <h2 class="article-title">{{ blog.articleTitle }}</h2>
-            <p class="article-content">{{ blog.articleContent.replace(/<[^>]+>/g, '').substring(0, 50) }}...</p>
+            <p class="article-content">{{
+                blog.articleContent.replace(/<[^>]*>/g, '').replace(/&nbsp;|&#160;|&amp;nbsp;/g, '').substring(0, 50)
+              }}...</p>
             <div class="article-stats">
           <span>
             <font-awesome-icon :icon="['fas', 'eye']"/>&nbsp;{{ blog.articleViews }}
@@ -148,12 +198,12 @@ onMounted(() => {
                        @change="changeHandler"
             >
               <el-option-group
-                  v-for="sort in sortList"
+                  v-for="sort in (sortList as SortModel[])"
                   :key="sort.sortId"
                   :label="sort.sortName"
               >
                 <el-option
-                    v-for="item in sort.children"
+                    v-for="item in (sort.children as any)"
                     :key="item.sortId"
                     :label="item.sortName"
                     :value="item.sortName"
@@ -169,7 +219,7 @@ onMounted(() => {
             <div class="sorts-introduce">
               <span class="sort-title">热门文章Top5</span>
             </div>
-            <div class="blog-post" style="justify-items:center;text-align: center;width: 70%" v-for="blog in hotList"
+            <div class="blog-post" style="justify-items:center;text-align: center;width: 70%" v-for="blog in (hotList as Blog[])"
                  :key="blog.articleId" @click="articleDetail(blog)">
               <div class="author-info">
                 <img class="author-avatar" :src="blog.blogUsers.userProfilePhoto" alt="Author Avatar">

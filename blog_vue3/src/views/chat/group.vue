@@ -45,21 +45,21 @@ const sendMessage = () => {
   ListScrollRef.value.toSendMessage()
 }
 
-const keyCall = (e) => {
+const keyCall = (e : any) => {
   if (e.ctrlKey && e.keyCode == 13) {
     sendMessage()
   }
 }
 
-const appendText = (param) => {
+const appendText = (param : any) => {
   message.value += param.emoji
 }
 
-const getGroupAllMessage = (grouId) => {
+const getGroupAllMessage = (grouId : any) => {
   $http({
     url: $http.adornUrl(`blog/redis/allGroupMessage/${grouId}`),
     method: 'get',
-  }).then(({data}) => {
+  }).then(({data} : any) => {
     let messages = data.data
     let array = []
     let trueObj = {}
@@ -80,7 +80,7 @@ const getGroupAllMessage = (grouId) => {
   })
 }
 
-const clearOffLineMessage = (groupId) => {
+const clearOffLineMessage = (groupId : any) => {
   $http({
     url: $http.adornUrl(`blog/redis/group/setBitmap/${groupId}/${UserStore.user?.userId}`),
     method: 'post',
@@ -101,11 +101,11 @@ onMounted(() => {
   getGroupAllMessage(router.currentRoute.value.query.groupId)
 })
 
-function findPhoto(id) {
+function findPhoto(id : any) {
   let currentGroup;
   for (let i = 0; i < GroupListStore.groupListSize; i++) {
     if (Number(GroupListStore.groupList[i].blogGroup.groupId) === Number(router.currentRoute.value.query.groupId)) {
-      currentGroup = GroupListStore.groupList[i]
+      currentGroup = GroupListStore.groupList[i] as any
       for (let i = 0; i < currentGroup.photosUrl.length; i++) {
         if (Number(currentGroup.photosUrl[i].id) === Number(id)) {
           return currentGroup.photosUrl[i].photoUrl
@@ -125,7 +125,7 @@ function findPhoto(id) {
         <div class="show-message" style="width: 100%;height: 100%">
           <ListScroll ref="ListScrollRef">
             <div class="chat-container">
-              <div v-for="(message, index) in GroupMessage.receiveGroupMessage" :key="index"
+              <div v-for="(message, index) in GroupMessage.receiveGroupMessage as any[]" :key="index"
                    :class="{ 'sent-message': Number(message.fromUser.userId) === Number(UserStore.user?.userId), 'received-message': Number(message.fromUser.userId) !== Number(UserStore.user?.userId) }">
                 <div v-if="Number(message.fromUser.userId) !== Number(UserStore.user?.userId)" class="avatar">
                   <el-image :src="findPhoto(message.fromUser.userId)"></el-image>

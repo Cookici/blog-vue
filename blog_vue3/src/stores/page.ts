@@ -7,7 +7,8 @@ export const pageStore = defineStore('page', {
         return {
             page: 1,
             sortId: 0,
-            value: ''
+            value: '',
+            keyword: ''
         }
     },
     actions: {

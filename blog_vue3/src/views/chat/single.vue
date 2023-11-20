@@ -23,7 +23,7 @@ let message = ref('')
 let friend: User = reactive(history.state.friend);
 const placeholder = `你正在和${friend.userName}聊天,请输入你的内容...`
 
-let emoji = ref(null)
+
 const sendMessage = () => {
 
   let friendName = ''
@@ -41,7 +41,7 @@ const sendMessage = () => {
   $http({
     url: $http.adornUrl(`blog/chat/getFriend/${friend.userId}`),
     method: 'get'
-  }).then(({data}) => {
+  }).then(({data}: any) => {
     console.log(data)
     friendName = data.data.userName
     let messageSelf = {
@@ -65,13 +65,13 @@ const sendMessage = () => {
 
 }
 
-const keyCall = (e) => {
+const keyCall = (e: any) => {
   if (e.ctrlKey && e.keyCode == 13) {
     sendMessage()
   }
 }
 
-const appendText = (param) => {
+const appendText = (param : any) => {
   message.value += param.emoji
 }
 
@@ -121,7 +121,7 @@ onMounted(() => {
         <div class="show-message" style="width: 100%;height: 100%">
           <ListScroll ref="ListScrollRef">
             <div class="chat-container">
-              <div v-for="(message, index) in SingleMessage.receiveMessage" :key="index"
+              <div v-for="(message, index) in SingleMessage.receiveMessage as any[]" :key="index"
                    :class="{ 'sent-message': Number(message.fromUser.userId) === Number(UserStore.user?.userId), 'received-message': Number(message.fromUser.userId) !== Number(UserStore.user?.userId) }">
                 <div v-if="Number(message.fromUser.userId) !== Number(UserStore.user?.userId)" class="avatar">
                   <el-image :src="friend.userProfilePhoto"></el-image>
