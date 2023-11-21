@@ -111,11 +111,8 @@ onMounted(() => {
       <el-input
           v-model="PageStore.keyword"
           placeholder="请输入你要搜索的文章"
-          prefix-icon="el-icon-search"
-          style="width: 70%;text-align: left"
-          clearable
-          @clear="search"
-          @keydown.enter.native="search">
+          :prefix-icon="Search"
+          style="width: 70%;text-align: left">
       </el-input>
       <el-button
           type="primary"
@@ -174,6 +171,7 @@ onMounted(() => {
 
         <div class="demo-pagination-block">
           <el-pagination
+              v-if="pageAll > 1"
               style="margin: 30px 30px 30px 40px;justify-content: center;"
               v-model:current-page="PageStore.page"
               v-model:page-count="pageAll"

@@ -6,11 +6,87 @@ import {getCurrentInstance, toRaw} from "vue";
 import {useRouter, useRoute} from "vue-router";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {userStore} from "../../stores/user.ts";
+import {
+  UAnchor,
+  CommentApi,
+  ConfigApi,
+  SubmitParamApi,
+  UToast,
+  createObjectURL,
+  dayjs,
+  UComment,
+  ReplyApi, usePage, ReplyPageParamApi
+} from 'undraw-ui'
+import emoji from '../../assets/emoji.ts'
+import {policy} from "../../components/upload/policy.js";
+import {v4} from "uuid";
+import axios from "axios";
+
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 const router = useRouter()
 const route = useRoute()
 const UserStore = userStore()
+
+
+//***********************************************
+const config = reactive<ConfigApi>({
+  user: {
+    id: UserStore.user?.userId,
+    username: UserStore.user?.userNickname,
+    avatar: UserStore.user?.userProfilePhoto,
+    likeIds: []
+  },
+  emoji: emoji,
+  comments: [],
+  total: 0
+})
+
+// 提交评论事件
+const submit = async ({content, parentId, files, finish}: SubmitParamApi) => {
+  console.log('提交评论: ' + content, parentId, files)
+
+  /**
+   * 上传文件后端返回图片访问地址，格式以'||'为分割; 如:  '/static/img/program.gif||/static/img/normal.webp'
+   */
+  if (files.length !== 0) {
+    let file = toRaw(files)
+    uploadImg(content, parentId, file[0], finish)
+    return
+  }
+
+  // let contentImg = files?.map(e => createObjectURL(e)).join('||')
+  toFinishCommentUpload(content, parentId, finish)
+
+}
+
+
+
+// 点赞按钮事件 将评论id返回后端判断是否点赞，然后在处理点赞状态
+const like = (id: string, finish: () => void) => {
+  console.log('点赞: ' + id)
+  setTimeout(() => {
+    finish()
+  }, 200)
+}
+
+config.comments = []
+
+//回复分页
+const replyPage = ({parentId, pageNum, pageSize, finish}: ReplyPageParamApi) => {
+  console.log("parentId", parentId)
+  console.log("pageNum", pageNum)
+  console.log("pageSize", pageSize)
+  // let tmp = {
+  //   total: config.comments.reply.total,
+  //   list: usePage(pageNum, pageSize, config.comments.reply.list)
+  // }
+  setTimeout(() => {
+    finish(tmp)
+  }, 200)
+}
+
+//*********************************************************
 
 let blogAndUser: Blog = reactive(history.state.blog);
 let likes = ref(0)
@@ -18,10 +94,114 @@ let views = ref(0)
 let articleNumber = ref(0)
 let articleList: Ref<UnwrapRef<any[]>> = ref([])
 let currentBlogId = ref(route.query.id)
+const allCommentSize = ref(0)
+const oss = reactive({
+  policy: '',
+  signature: '',
+  key: '',
+  ossaccessKeyId: '',
+  dir: '',
+  host: '',
+})
+let commentUrl = ref('')
 
-const addFriend = () => {
-  ElMessageBox.confirm(`是否添加${blogAndUser.blogUsers.userName}为好友`, "提示", {}).then(() => {
-    ElMessage.success("添加成功")
+
+const toFinishCommentUpload = (content: any, parentId: any, finish: any) => {
+  allCommentSize.value += 1
+
+  const comment: CommentApi = {
+    id: String(allCommentSize.value),
+    parentId: parentId,
+    uid: config.user.id,
+    address: '',
+    content: content,
+    likes: 0,
+    createTime: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+    contentImg: commentUrl.value,
+    user: {
+      username: config.user.username,
+      avatar: config.user.avatar,
+      level: UserStore.user?.userLevel,
+      homeLink: ``
+    },
+    reply: null
+  }
+
+  addComment(comment, finish)
+}
+
+const getPolicy = () => {
+  return new Promise((resolve, reject) => {
+    policy(UserStore.user?.userName).then(response => {
+      oss.policy = response.data.policy;
+      oss.signature = response.data.signature;
+      oss.ossaccessKeyId = response.data.accessid;
+      oss.key = response.data.dir + `${UserStore.user?.userName}:` + v4();
+      oss.dir = response.data.dir;
+      oss.host = response.data.host;
+      resolve(true)
+    }).catch((err: any) => {
+      reject(false)
+    })
+  })
+}
+
+const uploadImg = (content: any, parentId: any, file: any, finish: any) => {
+  getPolicy().then(() => {
+    let filename = file.name
+    let index = filename.lastIndexOf('.')
+    let suffix = filename.substring(index + 1, filename.length)
+    let formData = new FormData()
+    formData.append('policy', oss.policy)
+    formData.append('signature', oss.signature)
+    formData.append('key', `${oss.key}.${suffix}`)
+    formData.append('ossaccessKeyId', oss.ossaccessKeyId)
+    formData.append('dir', oss.dir)
+    formData.append('host', oss.host)
+    formData.append('file', file);
+    let headers = {
+      "Content-Type": "multipart/form-data",
+    }
+    axios.post("https://lrh-blog-project.oss-cn-beijing.aliyuncs.com", formData, headers as any).then((response: any) => {
+      commentUrl.value = `https://lrh-blog-project.oss-cn-beijing.aliyuncs.com/${oss.key}.${suffix}`
+      toFinishCommentUpload(content, parentId, finish)
+    }).catch((error) => {
+      console.log(error)
+      ElMessage.success("请求错误")
+    })
+  }).catch((error) => {
+    console.log(error)
+    ElMessage.success("未知错误")
+  })
+}
+
+const addComment = (comment: any, finish: any) => {
+  $http({
+    url: $http.adornUrl(`blog/comments/add/${blogAndUser.articleId}`),
+    method: "post",
+    data: $http.adornData(comment, false, 'json')
+  }).then(({data}: any) => {
+    if (data.data) {
+      setTimeout(() => {
+        finish(comment)
+      }, 200)
+      ElMessage.success("发表成功")
+    }
+  })
+}
+
+const getAllCommentSize = () => {
+  $http({
+    url: $http.adornUrl(`blog/comments/total`),
+    method: "get",
+  }).then(({data}: any) => {
+    allCommentSize.value = data.data
+    console.log("allSize ==> ", allCommentSize.value)
+  })
+}
+
+const seeCenter = () => {
+  ElMessageBox.confirm(`是否查看${blogAndUser.blogUsers.userName}的个人中心`, "提示", {}).then(() => {
   }).catch(() => {
     ElMessage.success("取消成功")
   })
@@ -97,10 +277,31 @@ const upDateView = () => {
   })
 }
 
+const getComments = () => {
+  $http({
+    url: $http.adornUrl(`blog/comments/getAllComments/${blogAndUser.articleId}`),
+    method: "get",
+  }).then(({data}: { data: any }) => {
+    if(data.data === null){
+      config.comments = []
+      console.log("getComments ==> ",config.comments )
+      return
+    }
+    config.comments = data.data
+    console.log("getComments --> {}",  config.comments)
+
+  })
+}
+
+const comment = ref(false)
+
+
 onMounted(() => {
   getUserDetail();
   judgeLike()
   upDateView()
+  getComments()
+  getAllCommentSize()
 })
 
 </script>
@@ -111,7 +312,7 @@ onMounted(() => {
     <div class="user-left">
       <div class="user-card">
         <font-awesome-icon :icon="['fas', 'user']" style="position: relative;margin-right: auto "/>
-        <img class="user-image" :src="blogAndUser.blogUsers.userProfilePhoto" alt="User Image" @click="addFriend">
+        <img class="user-image" :src="blogAndUser.blogUsers.userProfilePhoto" alt="User Image" @click="seeCenter">
         <div class="user-info">
           <div class="user-details">
             <h3>昵称：{{ blogAndUser.blogUsers.userNickname }}</h3>
@@ -177,34 +378,90 @@ onMounted(() => {
 
 
     <div class="article-right">
-      <div class="article-title">
-        <div>
+      <div class="content-article-show-nice">
+        <div style="padding:40px">
           <el-row>
-            <el-col :span="8"></el-col>
-            <el-col :span="8"></el-col>
-            <el-col :span="8" style="text-align: right">
-              <font-awesome-icon :icon="['fas', 'eye']" style="font-size: 25px"/>
-              {{ blogAndUser.articleViews }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              <font-awesome-icon :icon="['fas', 'heart']" :style="{cursor: 'pointer',fontSize: '25px',color: color}"
-                                 @click="toLike"/>
-              {{ blogAndUser.articleLikeCount }}
+            <el-col :span="17" id="total-article-container">
+              <el-row>
+                <el-col :span="24" style="text-align: left">
+                  <font-awesome-icon :icon="['fas', 'eye']" style="font-size: 25px"/>
+                  {{ blogAndUser.articleViews }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  <font-awesome-icon :icon="['fas', 'heart']"
+                                     :style="{cursor: 'pointer',fontSize: '25px',color: color}"
+                                     @click="toLike"/>
+                  {{ blogAndUser.articleLikeCount }}
+                </el-col>
+              </el-row>
+              <div class="article-listened" id="article-listened">
+                <div class="article-title">
+                  <h1>{{ blogAndUser.articleTitle }}</h1>
+                </div>
+                <div class="article-content" id="article-content">
+
+                </div>
+              </div>
+            </el-col>
+            <el-col :span="1" style="border-right: rgb(241,241,241) solid 2px;"></el-col>
+            <el-col :span="6">
+              <div class="article-catalog">
+                <u-anchor container="#article-listened"
+                          style="position: fixed;pointer-events: none;margin-left: 20px"
+                          target=".article-content">
+                </u-anchor>
+              </div>
             </el-col>
           </el-row>
         </div>
-        <h1>{{ blogAndUser.articleTitle }}</h1>
       </div>
+      <el-link class="detail-comment" @click="comment = true">查看评论</el-link>
+      <el-drawer
+          v-model="comment"
+          title="评论详情"
+          direction="rtl"
+          size="40%">
+        <u-comment
+            :config="config" page upload @submit="submit"
+            @like="like" relative-time @reply-page="replyPage"
+        >
+          <!-- <div>导航栏卡槽</div> -->
+          <!-- <template #header>头部卡槽</template> -->
+          <!-- <template #info>用户信息卡槽</template> -->
+          <!-- <template #card>用户信息卡片卡槽</template> -->
+          <!-- <template #opearte>操作栏卡槽</template> -->
+          <!-- <template #func>功能区域卡槽</template> -->
+        </u-comment>
+      </el-drawer>
 
-
-      <div class="article-content" id="article-content">
-
-      </div>
     </div>
-
   </div>
 
 </template>
 
 <style scoped>
+
+
+.article-catalog {
+  width: 15%;
+}
+
+.content-article-show-nice {
+  height: 100%;
+  width: 100%;
+  background-color: #ffffff;
+  box-shadow: 2px 2px 30px rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.detail-comment {
+  position: absolute;
+  bottom: 0;
+  left: 83.5%;
+  transform: translate(-50%, -50%);
+  color: rgb(141,151,156);
+  z-index: 1;
+  font-size: large;
+  font-weight: bold;
+}
 
 .colorful {
   background: linear-gradient(to bottom, #96969b, #6c7b88, #484d52);
@@ -234,7 +491,6 @@ onMounted(() => {
   justify-items: center;
   align-items: center;
   text-align: center;
-
 }
 
 
@@ -247,7 +503,7 @@ onMounted(() => {
   box-shadow: 2px 2px 30px rgba(0, 0, 0, 0.05);
   padding: 15px;
   border-radius: 10px;
-  margin: 30px 30px 30px 40px;
+  margin: 10px 30px 30px 40px;
   width: 80%;
 }
 

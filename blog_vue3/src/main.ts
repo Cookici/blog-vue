@@ -7,6 +7,7 @@ import {fab} from '@fortawesome/free-brands-svg-icons'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import App from './App.vue'
 import router from "./router/index.js";
+import UndrawUi from 'undraw-ui'
 import ElementPlus from 'element-plus'
 import http from "./utils/axios.js";
 import VueCropper from 'vue-cropper';
@@ -16,6 +17,7 @@ import piniaPersist from 'pinia-plugin-persist'
 import 'vue-cropper/dist/index.css'
 import 'element-plus/dist/index.css'
 import "v3-scroll/dist/library.mjs.css";
+import 'undraw-ui/dist/style.css'
 
 
 library.add(fas, far, fab)
@@ -32,6 +34,7 @@ app.use(router)
     .use(pinia)
     .use(VueCropper)
     .use(eventBus)
+    .use(UndrawUi)
     .component('font-awesome-icon', FontAwesomeIcon)
 
 

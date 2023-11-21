@@ -1,5 +1,6 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import {socket} from "../utils/websocket";
+import PersonCenter from "../views/center/personCenter.vue";
 
 
 const routes = [
@@ -36,6 +37,11 @@ const routes = [
                 path: '/home/subArticle',
                 name: 'SubmitArticle',
                 component: () => import("../views/article/submitArticle.vue")
+            },
+            {
+                path: '/home/personCenter',
+                name: PersonCenter,
+                component: () => import("../views/center/personCenter.vue")
             },
             {
                 path: '/home/chat',
