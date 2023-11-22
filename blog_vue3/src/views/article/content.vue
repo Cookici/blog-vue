@@ -152,7 +152,10 @@ onMounted(() => {
               <div class="article-sort-label" style="margin-left: 50px">
                 <font-awesome-icon :icon="['far', 'bookmark']"/>&nbsp;{{ blog.blogSorts.sortAlias }}
               </div>
-              <div class="post-time">{{ blog.articleDate.replace(new RegExp('T'), " ") }}</div>
+              <div class="post-time">
+                <font-awesome-icon :icon="['far', 'calendar']" />
+                {{ blog.articleDate.replace(new RegExp('T'), " ") }}
+              </div>
             </div>
             <h2 class="article-title">{{ blog.articleTitle }}</h2>
             <p class="article-content">{{
@@ -226,7 +229,10 @@ onMounted(() => {
                   <span style="font-weight: 100;color: #96969b"> {{ blog.blogUsers.userName }}</span><br>
                   <span class="user-level colorful">level: {{ blog.blogUsers.userLevel }}</span>
                 </div>
-                <div class="post-time">{{ blog.articleDate.replace(new RegExp('T'), " ") }}</div>
+                <div class="post-time">
+                  <font-awesome-icon :icon="['far', 'calendar']" />
+                  {{ blog.articleDate.replace(new RegExp('T'), " ") }}
+                </div>
               </div>
               <h2 class="article-title">{{ blog.articleTitle }}</h2>
               <p class="article-content">{{ blog.articleContent.replace(/<[^>]+>/g, '').substring(0, 50) }}...</p>

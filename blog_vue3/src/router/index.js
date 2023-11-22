@@ -39,7 +39,7 @@ const routes = [
                 component: () => import("../views/article/submitArticle.vue")
             },
             {
-                path: '/home/personCenter',
+                path: '/home/personCenter/:userId',
                 name: PersonCenter,
                 component: () => import("../views/center/personCenter.vue")
             },

@@ -1,7 +1,7 @@
 import axios from "axios";
 import merge from "lodash/merge"
 import router from "../router";
-import {ElMessage} from "element-plus";
+import {message} from "./resetMessage";
 import qs from 'qs'
 
 
@@ -34,7 +34,7 @@ http.interceptors.response.use(response => {
     if (error.response.data.code === 401) { // 401, token失效 或 错误token
         localStorage.removeItem('token')
         localStorage.removeItem('user')
-        ElMessage.error("登录过期,请重新登录")
+        message.error("登录过期,请重新登录")
         router.push({path: '/login'})
     }
     return Promise.reject(error)

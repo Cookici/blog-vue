@@ -12,6 +12,7 @@ import {readStore} from "../stores/read.ts";
 import {groupListStore} from "../stores/groupList.ts";
 import {groupMessage} from "../stores/groupMessage.ts";
 import {groupReadStore} from "../stores/groupRead.ts";
+import {likeStore} from "../stores/like.ts";
 
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
@@ -24,6 +25,7 @@ const GroupListStore = groupListStore()
 const GroupMessage = groupMessage()
 const GroupReadStore = groupReadStore()
 
+const index = ref(`/home/personCenter/${UserStore.user?.userId}`)
 
 let dialogVisible = ref(false)
 
@@ -166,6 +168,7 @@ onBeforeMount(() => {
   getAllGroup()
 })
 
+
 onMounted(() => {
   messageFromWebSocket()
 })
@@ -219,7 +222,7 @@ onBeforeUnmount(() => {
             <div class="flex-grow"/>
             <el-menu-item index="/home/content">博客主页</el-menu-item>
             <el-menu-item index="/home/subArticle">发表博客</el-menu-item>
-            <el-menu-item index="/home/personCenter">个人中心</el-menu-item>
+            <el-menu-item :index="index">个人中心</el-menu-item>
             <el-menu-item index="/home/chat">聊天主页</el-menu-item>
           </el-menu>
         </div>

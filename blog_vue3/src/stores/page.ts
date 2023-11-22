@@ -8,7 +8,8 @@ export const pageStore = defineStore('page', {
             page: 1,
             sortId: 0,
             value: '',
-            keyword: ''
+            keyword: '',
+            commentPage: 1
         }
     },
     actions: {

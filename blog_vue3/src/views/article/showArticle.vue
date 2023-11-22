@@ -1,33 +1,52 @@
 <script setup lang="ts">
 
-import {onMounted, reactive, Ref, ref, UnwrapRef} from "vue";
+import {onBeforeMount, onMounted, reactive, Ref, ref, UnwrapRef} from "vue";
 import {Blog} from "../../models/blog.model.ts";
 import {getCurrentInstance, toRaw} from "vue";
 import {useRouter, useRoute} from "vue-router";
 import {ElMessage, ElMessageBox} from "element-plus";
 import {userStore} from "../../stores/user.ts";
+import {likeStore} from "../../stores/like.ts";
 import {
   UAnchor,
   CommentApi,
   ConfigApi,
   SubmitParamApi,
-  UToast,
-  createObjectURL,
   dayjs,
   UComment,
-  ReplyApi, usePage, ReplyPageParamApi
+  usePage, ReplyPageParamApi
 } from 'undraw-ui'
 import emoji from '../../assets/emoji.ts'
 import {policy} from "../../components/upload/policy.js";
 import {v4} from "uuid";
 import axios from "axios";
+import {pageStore} from "../../stores/page.ts";
 
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 const router = useRouter()
 const route = useRoute()
 const UserStore = userStore()
+const LikeStore = likeStore()
+const PageStore = pageStore()
 
+let blogAndUser: Blog = reactive(history.state.blog);
+let likes = ref(0)
+let views = ref(0)
+let articleNumber = ref(0)
+let articleList: Ref<UnwrapRef<any[]>> = ref([])
+let currentBlogId = ref(route.query.id)
+let pageAll = ref(0)
+let total = ref(0)
+const lastId = ref(0)
+const oss = reactive({
+  policy: '',
+  signature: '',
+  key: '',
+  ossaccessKeyId: '',
+  dir: '',
+  host: '',
+})
 
 //***********************************************
 const config = reactive<ConfigApi>({
@@ -35,12 +54,14 @@ const config = reactive<ConfigApi>({
     id: UserStore.user?.userId,
     username: UserStore.user?.userNickname,
     avatar: UserStore.user?.userProfilePhoto,
-    likeIds: []
+    likeIds: LikeStore.commentLike
   },
   emoji: emoji,
   comments: [],
   total: 0
 })
+
+config.comments = []
 
 // 提交评论事件
 const submit = async ({content, parentId, files, finish}: SubmitParamApi) => {
@@ -61,56 +82,64 @@ const submit = async ({content, parentId, files, finish}: SubmitParamApi) => {
 }
 
 
-
 // 点赞按钮事件 将评论id返回后端判断是否点赞，然后在处理点赞状态
 const like = (id: string, finish: () => void) => {
-  console.log('点赞: ' + id)
-  setTimeout(() => {
-    finish()
-  }, 200)
+  console.log('点赞: ', id)
+  console.log("LikeStore.commentLike before ===> ", LikeStore.commentLike)
+  if (LikeStore.commentLike.indexOf(Number(id)) !== -1) {
+    ElMessage.warning("已经点赞该评论")
+    return
+  }
+
+
+
+  $http({
+    url: $http.adornUrl(`blog/comments/addLike`),
+    method: "put",
+    data: $http.adornData({commentId: id, userId: UserStore.user?.userId}, false, 'json')
+  }).then(({data}: { data: any }) => {
+    if (data.data === 2) {
+      ElMessage.success("点赞成功")
+      setTimeout(() => {
+        finish()
+        console.log("LikeStore.commentLike end ===> ", LikeStore.commentLike)
+      }, 200)
+    } else {
+      ElMessage.error("未知错误")
+    }
+  })
 }
 
-config.comments = []
 
 //回复分页
 const replyPage = ({parentId, pageNum, pageSize, finish}: ReplyPageParamApi) => {
-  console.log("parentId", parentId)
-  console.log("pageNum", pageNum)
-  console.log("pageSize", pageSize)
-  // let tmp = {
-  //   total: config.comments.reply.total,
-  //   list: usePage(pageNum, pageSize, config.comments.reply.list)
-  // }
-  setTimeout(() => {
-    finish(tmp)
-  }, 200)
+
+  $http({
+    url: $http.adornUrl(`blog/comments/page/${parentId}`),
+    method: "get",
+  }).then(({data}: { data: any }) => {
+    console.log("getPage ==> ", data.data)
+    let tmp = {
+      total: data.data.total,
+      list: usePage(pageNum, pageSize, data.data.list)
+    }
+    setTimeout(() => {
+      finish(tmp)
+    }, 200)
+  })
+
 }
 
 //*********************************************************
 
-let blogAndUser: Blog = reactive(history.state.blog);
-let likes = ref(0)
-let views = ref(0)
-let articleNumber = ref(0)
-let articleList: Ref<UnwrapRef<any[]>> = ref([])
-let currentBlogId = ref(route.query.id)
-const allCommentSize = ref(0)
-const oss = reactive({
-  policy: '',
-  signature: '',
-  key: '',
-  ossaccessKeyId: '',
-  dir: '',
-  host: '',
-})
+
 let commentUrl = ref('')
 
-
 const toFinishCommentUpload = (content: any, parentId: any, finish: any) => {
-  allCommentSize.value += 1
+  lastId.value += 1
 
   const comment: CommentApi = {
-    id: String(allCommentSize.value),
+    id: String(lastId.value),
     parentId: parentId,
     uid: config.user.id,
     address: '',
@@ -190,13 +219,13 @@ const addComment = (comment: any, finish: any) => {
   })
 }
 
-const getAllCommentSize = () => {
+const getLastCommentId = () => {
   $http({
-    url: $http.adornUrl(`blog/comments/total`),
+    url: $http.adornUrl(`blog/comments/lastId`),
     method: "get",
   }).then(({data}: any) => {
-    allCommentSize.value = data.data
-    console.log("allSize ==> ", allCommentSize.value)
+    lastId.value = data.data
+    console.log("lastId ==> ", lastId.value)
   })
 }
 
@@ -229,44 +258,56 @@ const articleDetail = (blog: any) => {
 
 let color = ref('')
 
-const toLike = () => {
-  ElMessageBox.confirm("提示", "是否点赞该文章").then(() => {
-    let isLike = localStorage.getItem(`isLike${blogAndUser.articleId}`)
-    if (isLike !== `${UserStore.user?.userId}${blogAndUser.articleId}`) {
-      updateLike()
-      return
-    }
-    ElMessage.warning("你已经点过赞了")
-  }).catch(() => {
-    ElMessage.success("取消成功")
-  })
 
+const getUserLikeComments = () => {
+  $http({
+    url: $http.adornUrl(`blog/comment-like/getCommentList/${UserStore.user?.userId}`),
+    method: "get",
+  }).then(({data}: { data: any }) => {
+    LikeStore.commentLike = data.data
+    config.user.likeIds = data.data
+    console.log("commentLike ==> ", LikeStore.commentLike)
+    console.log("getUserLikeComments config.user.likeIds ==> ", config.user.likeIds)
+  })
 }
 
 const updateLike = () => {
   $http({
-    url: $http.adornUrl(`blog/articles/addLike/${blogAndUser.articleId}`),
-    method: "post",
+    url: $http.adornUrl(`blog/articles/addLike`),
+    method: "put",
+    data: $http.adornData({articleId: blogAndUser.articleId, userId: UserStore.user?.userId}, false, 'json')
   }).then(({data}: { data: any }) => {
-    if (data.data === 1) {
+    if (data.data === 2) {
       blogAndUser.articleLikeCount++
-      localStorage.setItem(`isLike${blogAndUser.articleId}`, `${UserStore.user?.userId}${blogAndUser.articleId}`)
       color.value = '#ff0000'
       ElMessage.success("点赞成功")
+      LikeStore.articleLike.push(blogAndUser.articleId)
     } else {
       ElMessage.error("未知错误")
     }
   })
 }
 
-const judgeLike = () => {
-  let isLike = localStorage.getItem(`isLike${blogAndUser.articleId}`)
-  if (isLike !== `${UserStore.user?.userId}${blogAndUser.articleId}`) {
-    color.value = ''
+const getUserLikeArticle = () => {
+  $http({
+    url: $http.adornUrl(`blog/articles-like/getLikeList/${UserStore.user?.userId}`),
+    method: "get",
+  }).then(({data}: { data: any }) => {
+    LikeStore.articleLike = data.data
+    if (LikeStore.articleLike.indexOf(blogAndUser.articleId) !== -1) {
+      color.value = '#ff0000'
+    }
+  })
+}
+
+const toLike = () => {
+  if (LikeStore.articleLike.indexOf(blogAndUser.articleId) !== -1) {
+    ElMessage.warning("你已经点赞过该文章了")
   } else {
-    color.value = '#ff0000'
+    updateLike()
   }
 }
+
 
 const upDateView = () => {
   $http({
@@ -279,18 +320,23 @@ const upDateView = () => {
 
 const getComments = () => {
   $http({
-    url: $http.adornUrl(`blog/comments/getAllComments/${blogAndUser.articleId}`),
+    url: $http.adornUrl(`blog/comments/getAllComments/${blogAndUser.articleId}/${PageStore.commentPage}`),
     method: "get",
   }).then(({data}: { data: any }) => {
-    if(data.data === null){
+    console.log("getComments data ===>", data.data)
+    if (data.data === null) {
       config.comments = []
-      console.log("getComments ==> ",config.comments )
       return
     }
-    config.comments = data.data
-    console.log("getComments --> {}",  config.comments)
-
+    config.comments = data.data.comments
+    pageAll.value = data.data.pageAll
+    total.value = data.data.total
   })
+}
+
+const handleCommentCurrentChange = (val: number) => {
+  PageStore.commentPage = val
+  getComments()
 }
 
 const comment = ref(false)
@@ -298,10 +344,11 @@ const comment = ref(false)
 
 onMounted(() => {
   getUserDetail();
-  judgeLike()
   upDateView()
   getComments()
-  getAllCommentSize()
+  getUserLikeArticle()
+  getLastCommentId()
+  getUserLikeComments()
 })
 
 </script>
@@ -387,7 +434,7 @@ onMounted(() => {
                   <font-awesome-icon :icon="['fas', 'eye']" style="font-size: 25px"/>
                   {{ blogAndUser.articleViews }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                   <font-awesome-icon :icon="['fas', 'heart']"
-                                     :style="{cursor: 'pointer',fontSize: '25px',color: color}"
+                                     :style="{cursor: 'pointer',fontSize: '25px',color:  color}"
                                      @click="toLike"/>
                   {{ blogAndUser.articleLikeCount }}
                 </el-col>
@@ -418,8 +465,9 @@ onMounted(() => {
           v-model="comment"
           title="评论详情"
           direction="rtl"
-          size="40%">
+          size="45%">
         <u-comment
+            style="margin-top: -20px"
             :config="config" page upload @submit="submit"
             @like="like" relative-time @reply-page="replyPage"
         >
@@ -430,6 +478,17 @@ onMounted(() => {
           <!-- <template #opearte>操作栏卡槽</template> -->
           <!-- <template #func>功能区域卡槽</template> -->
         </u-comment>
+        <el-pagination
+            v-if="pageAll > 1"
+            style="margin: 30px 30px 30px 30px"
+            v-model:current-page="PageStore.commentPage"
+            v-model:page-count="pageAll"
+            :small="false"
+            background layout="prev, pager, next, jumper"
+            :total="total"
+            :pager-count="5"
+            @current-change="handleCommentCurrentChange"
+        />
       </el-drawer>
 
     </div>
@@ -457,7 +516,7 @@ onMounted(() => {
   bottom: 0;
   left: 83.5%;
   transform: translate(-50%, -50%);
-  color: rgb(141,151,156);
+  color: rgb(141, 151, 156);
   z-index: 1;
   font-size: large;
   font-weight: bold;
