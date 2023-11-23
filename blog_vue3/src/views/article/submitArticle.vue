@@ -50,7 +50,10 @@ import {BlogLabels} from "../../models/blog.model.ts";
 
 const UserStore = userStore()
 const ActiveIndexStore = activeIndexStore()
-
+const router = useRouter()
+let title = ref('')
+let content = ref('')
+const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 const oss = reactive({
   policy: '',
   signature: '',
@@ -59,7 +62,10 @@ const oss = reactive({
   dir: '',
   host: '',
 })
-
+const labelList = ref([] as any[])
+const sortList = ref([])
+let labelAndSort = reactive([]);
+let status = history.state.articleJSON === undefined ? 'add' : 'update'
 
 const getPolicy = () => {
   return new Promise((resolve, reject) => {
@@ -155,15 +161,6 @@ const deleteFileFromServer = (fileUrl: string) => {
   })
 }
 
-const router = useRouter()
-
-
-let title = ref('')
-
-let content = ref('')
-
-const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
-
 
 const submit = () => {
   if (labelAndSort.length === 0) {
@@ -206,12 +203,6 @@ const clearContent = () => {
   })
 }
 
-const labelList = ref([] as any[])
-
-const sortList = ref([])
-
-let labelAndSort = reactive([]);
-
 
 const getLabels = () => {
   $http({
@@ -219,7 +210,7 @@ const getLabels = () => {
     method: 'get'
   }).then(({data}: any) => {
     labelList.value = data.data
-    labelList.value  = labelList.value.map((item: BlogLabels) => {
+    labelList.value = labelList.value.map((item: BlogLabels) => {
       return {
         sortId: item.labelId as number,
         sortName: item.labelName as string,
@@ -243,7 +234,7 @@ const getSortList = () => {
     for (let i = 0; i < labelList.value.length; i++) {
       let children = {children: sortList.value}
       let key = 'children'
-      labelList.value[i][key]= children.children ;
+      labelList.value[i][key] = children.children;
     }
     console.log("labelList ==> ", labelList.value)
   })
@@ -255,6 +246,52 @@ const labelAndSortHandle = (val: any) => {
   console.log("labelAndSortHandle --> ", labelAndSort)
 }
 
+const judgeStatus = () => {
+  if (status === 'update') {
+    let article = JSON.parse(history.state.articleJSON)
+    console.log("article json ==> ", article)
+    content.value = article.articleContent
+    title.value = article.articleTitle
+    getLabelAndSort(article.articleId)
+  }
+}
+
+const getLabelAndSort = (articleId) => {
+  $http({
+    url: $http.adornUrl(`blog/articles/get/labelAndSort/${articleId}`),
+    method: 'get'
+  }).then(({data}: any) => {
+    console.log("getLabelAndSort ===> ", data.data)
+    labelAndSort.push(data.data.labelId)
+    labelAndSort.push(data.data.sortParentId)
+    labelAndSort.push(data.data.sortId)
+    console.log("labelAndSort ===> ", labelAndSort)
+  })
+}
+
+const updateArticle = () => {
+  let article = JSON.parse(history.state.articleJSON)
+  $http({
+    url: $http.adornUrl(`blog/articles/update/${article.articleId}/${UserStore.user?.userName}`),
+    method: 'put',
+    data: $http.adornData({title: title.value, content: content.value, labelId: labelAndSort[0], sortId: labelAndSort[2]}, false, 'json')
+  }).then(({data}: any) => {
+    if (data.data === 3) {
+      ElMessage.success("更新成功")
+      labelAndSort = []
+      title.value = ''
+      content.value = ''
+      router.push({path: '/home/content'}).then(() => {
+        ActiveIndexStore.activeIndex = '/home/content'
+      })
+    }
+  }).catch(() => {
+    labelAndSort = []
+    title.value = ''
+    content.value = ''
+  })
+
+}
 
 const props = {
   expandTrigger: 'hover' as const,
@@ -265,6 +302,7 @@ const props = {
 onMounted(() => {
   tinymce.init({}) // 初始化富文本
   ActiveIndexStore.activeIndex = '/home/subArticle'
+  judgeStatus()
   getLabels()
 })
 
@@ -318,13 +356,18 @@ onMounted(() => {
 ;align-items: center;justify-content: center">
             <el-row :gutter="20">
               <el-col :span="8">
-                <el-button type="primary" @click="submit()" style="flex: 1;margin-top: 30px;width: 80px;">发表
+                <el-button type="primary" v-if="status === 'add'" @click="submit()"
+                           style="flex: 1;margin-top: 30px;width: 80px;">发表
                 </el-button>
               </el-col>
               <el-col :span="8">
+                <el-button type="primary" v-if="status === 'update'" @click="updateArticle()"
+                           style="flex: 1;margin-top: 30px;width: 80px;">更新
+                </el-button>
               </el-col>
               <el-col :span="8">
-                <el-button type="primary" @click="clearContent" style="flex: 1;margin-top: 30px;width: 80px;">清空
+                <el-button type="primary" v-if="status === 'add'" @click="clearContent"
+                           style="flex: 1;margin-top: 30px;width: 80px;">清空
                 </el-button>
               </el-col>
             </el-row>

@@ -79,7 +79,7 @@ const getHotArticle = () => {
   $http({
     url: $http.adornUrl(`blog/articles/hotArticle`),
     method: 'get'
-  }).then(({data} : any) => {
+  }).then(({data}: any) => {
     hotList.value = data.data
     console.log("hotList", hotList.value)
   })
@@ -89,7 +89,7 @@ const search = () => {
   getPage(PageStore.sortId)
 }
 
-const deleteKeyword = () =>{
+const deleteKeyword = () => {
   PageStore.keyword = ''
   getPage(PageStore.sortId)
 }
@@ -153,7 +153,7 @@ onMounted(() => {
                 <font-awesome-icon :icon="['far', 'bookmark']"/>&nbsp;{{ blog.blogSorts.sortAlias }}
               </div>
               <div class="post-time">
-                <font-awesome-icon :icon="['far', 'calendar']" />
+                <font-awesome-icon :icon="['far', 'calendar']"/>
                 {{ blog.articleDate.replace(new RegExp('T'), " ") }}
               </div>
             </div>
@@ -163,10 +163,10 @@ onMounted(() => {
               }}...</p>
             <div class="article-stats">
           <span>
-            <font-awesome-icon :icon="['fas', 'eye']"/>&nbsp;{{ blog.articleViews }}
+            <font-awesome-icon :icon="['fas', 'eye']" />&nbsp;{{ blog.articleViews }}
           </span>
               <span>
-            <font-awesome-icon :icon="['fas', 'heart']" style="color: #fd2008;"/>&nbsp;{{ blog.articleLikeCount }}
+            <font-awesome-icon :icon="['fas', 'heart']" style="color: #fd2008;" />&nbsp;{{ blog.articleLikeCount }}
           </span>
             </div>
           </div>
@@ -220,7 +220,8 @@ onMounted(() => {
             <div class="sorts-introduce">
               <span class="sort-title">热门文章Top5</span>
             </div>
-            <div class="blog-post" style="justify-items:center;text-align: center;width: 70%" v-for="blog in (hotList as Blog[])"
+            <div class="blog-post" style="justify-items:center;text-align: center;width: 70%"
+                 v-for="blog in (hotList as Blog[])"
                  :key="blog.articleId" @click="articleDetail(blog)">
               <div class="author-info">
                 <img class="author-avatar" :src="blog.blogUsers.userProfilePhoto" alt="Author Avatar">
@@ -238,10 +239,10 @@ onMounted(() => {
               <p class="article-content">{{ blog.articleContent.replace(/<[^>]+>/g, '').substring(0, 50) }}...</p>
               <div class="article-stats">
           <span>
-            <font-awesome-icon :icon="['fas', 'eye']"/>&nbsp;{{ blog.articleViews }}
+            <font-awesome-icon :icon="['fas', 'eye']" />&nbsp;{{ blog.articleViews }}
           </span>
                 <span>
-            <font-awesome-icon :icon="['fas', 'heart']" style="color: #fd2008;"/>&nbsp;{{ blog.articleLikeCount }}
+            <font-awesome-icon :icon="['fas', 'heart']" style="color: #fd2008;" />&nbsp;{{ blog.articleLikeCount }}
           </span>
               </div>
             </div>

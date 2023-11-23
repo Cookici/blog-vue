@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {getCurrentInstance, onBeforeUnmount, onMounted, ref} from "vue";
+import {getCurrentInstance, onBeforeUnmount, onMounted, reactive, ref} from "vue";
 import {socket} from "../../utils/websocket.js";
 import V3Emoji from "vue3-emoji";
 import 'vue3-emoji/dist/style.css'
@@ -9,6 +9,7 @@ import {groupMessage} from "../../stores/groupMessage.ts";
 import ListScroll from "../../components/ListScroll.vue";
 import {groupListStore} from "../../stores/groupList.ts";
 import {userStore} from "../../stores/user.ts";
+import {User} from "../../models/user.model.ts";
 
 const {$http} = (getCurrentInstance() as any).appContext.config.globalProperties
 let message = ref('')
@@ -45,21 +46,21 @@ const sendMessage = () => {
   ListScrollRef.value.toSendMessage()
 }
 
-const keyCall = (e : any) => {
+const keyCall = (e: any) => {
   if (e.ctrlKey && e.keyCode == 13) {
     sendMessage()
   }
 }
 
-const appendText = (param : any) => {
+const appendText = (param: any) => {
   message.value += param.emoji
 }
 
-const getGroupAllMessage = (grouId : any) => {
+const getGroupAllMessage = (grouId: any) => {
   $http({
     url: $http.adornUrl(`blog/redis/allGroupMessage/${grouId}`),
     method: 'get',
-  }).then(({data} : any) => {
+  }).then(({data}: any) => {
     let messages = data.data
     let array = []
     let trueObj = {}
@@ -80,7 +81,7 @@ const getGroupAllMessage = (grouId : any) => {
   })
 }
 
-const clearOffLineMessage = (groupId : any) => {
+const clearOffLineMessage = (groupId: any) => {
   $http({
     url: $http.adornUrl(`blog/redis/group/setBitmap/${groupId}/${UserStore.user?.userId}`),
     method: 'post',
@@ -90,8 +91,20 @@ const clearOffLineMessage = (groupId : any) => {
   })
 }
 
+const users: User[] = ref([])
 
-onBeforeUnmount(()=>{
+const getUsersByGroupId = (groupId: any) => {
+  $http({
+    url: $http.adornUrl(`blog/group/getGroupUser/${groupId}`),
+    method: 'get',
+  }).then(({data}) => {
+    users.value = data.data
+    console.log("getUsersByGroupId ==> ", users)
+  })
+}
+
+
+onBeforeUnmount(() => {
   GroupMessage.groupId = ''
 })
 
@@ -99,9 +112,10 @@ onMounted(() => {
   GroupMessage.groupId = router.currentRoute.value.query.groupId
   clearOffLineMessage(router.currentRoute.value.query.groupId)
   getGroupAllMessage(router.currentRoute.value.query.groupId)
+  getUsersByGroupId(router.currentRoute.value.query.groupId)
 })
 
-function findPhoto(id : any) {
+function findPhoto(id: any) {
   let currentGroup;
   for (let i = 0; i < GroupListStore.groupListSize; i++) {
     if (Number(GroupListStore.groupList[i].blogGroup.groupId) === Number(router.currentRoute.value.query.groupId)) {
@@ -131,7 +145,7 @@ function findPhoto(id : any) {
                   <el-image :src="findPhoto(message.fromUser.userId)"></el-image>
                 </div> <!-- Left Avatar -->
                 <div class="message-bubble">
-                  {{ message.message }}
+                  <span style="color: #7a9fc0">{{ users[Number(message.fromUser.userId)] }}:</span><br> {{ message.message }}
                 </div>
                 <div v-if="Number(message.fromUser.userId) === Number(UserStore.user?.userId)" class="avatar">
                   <el-image :src="UserStore.user?.userProfilePhoto"></el-image>

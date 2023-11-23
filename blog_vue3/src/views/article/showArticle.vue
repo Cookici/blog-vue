@@ -92,7 +92,6 @@ const like = (id: string, finish: () => void) => {
   }
 
 
-
   $http({
     url: $http.adornUrl(`blog/comments/addLike`),
     method: "put",
@@ -229,8 +228,9 @@ const getLastCommentId = () => {
   })
 }
 
-const seeCenter = () => {
+const seeCenter = (userId: any) => {
   ElMessageBox.confirm(`是否查看${blogAndUser.blogUsers.userName}的个人中心`, "提示", {}).then(() => {
+    router.push({path: `/home/personCenter/${userId}`})
   }).catch(() => {
     ElMessage.success("取消成功")
   })
@@ -359,7 +359,8 @@ onMounted(() => {
     <div class="user-left">
       <div class="user-card">
         <font-awesome-icon :icon="['fas', 'user']" style="position: relative;margin-right: auto "/>
-        <img class="user-image" :src="blogAndUser.blogUsers.userProfilePhoto" alt="User Image" @click="seeCenter">
+        <img class="user-image" :src="blogAndUser.blogUsers.userProfilePhoto" alt="User Image"
+             @click="seeCenter(blogAndUser.blogUsers.userId)">
         <div class="user-info">
           <div class="user-details">
             <h3>昵称：{{ blogAndUser.blogUsers.userNickname }}</h3>

@@ -148,14 +148,14 @@ const goSingleChat = (friend: any) => {
   router.push({path: '/home/chat/single', query: {friendId: friend.userId}, state: {friend}})
 }
 
-const clearRedPoint = (friendId : any) => {
+const clearRedPoint = (friendId: any) => {
   $http({
     url: $http.adornUrl(`blog/redis/redPoint/clear`),
     method: 'put',
     data: $http.adornData({userId: UserStore.user?.userId, friendId: friendId}, false, 'json')
   }).then(({data}: any) => {
     console.log(data.data)
-    ReadStore.read[friendId]  = 0
+    ReadStore.read[friendId] = 0
   })
 }
 
@@ -165,7 +165,7 @@ const clearRedGroupPoint = (groupId: any) => {
     method: 'put',
     data: $http.adornData({userId: UserStore.user?.userId, groupId: groupId}, false, 'json')
   }).then(({data}: any) => {
-    GroupReadStore.groupRead[groupId]  = 0
+    GroupReadStore.groupRead[groupId] = 0
     console.log(data.data)
   })
 }
@@ -208,7 +208,7 @@ onBeforeMount(() => {
 const groupChat = (group: any, groupList: any) => {
   GroupMessage.receiveGroupMessage = []
   GroupMessage.groupId = ''
-  offLineGroupMessage[Number(group.blogGroup.groupId)]  = 0
+  offLineGroupMessage[Number(group.blogGroup.groupId)] = 0
   clearRedGroupPoint(group.blogGroup.groupId)
   router.push({path: '/home/chat/group', query: {groupId: group.blogGroup.groupId}, state: {groupList}})
 }
@@ -219,7 +219,7 @@ const getOffLineGroupMessage = () => {
   $http({
     url: $http.adornUrl(`blog/group/noReadGroupMessage/${UserStore.user?.userId}`),
     method: 'get'
-  }).then(({data} : any) => {
+  }).then(({data}: any) => {
     console.log("getOffLineGroupMessage ==> ", data.data)
     offLineGroupMessage = data.data
   })
@@ -231,7 +231,7 @@ const redPointExit = () => {
   $http({
     url: $http.adornUrl(`blog/redis/redPoint/exit/${UserStore.user?.userId}`),
     method: 'get'
-  }).then(({data} : any) => {
+  }).then(({data}: any) => {
     ReadStore.read = data.data
     console.log("redPointExit", ReadStore.read)
   })
@@ -242,7 +242,7 @@ const redPointGroupExit = () => {
   $http({
     url: $http.adornUrl(`blog/redis/redPoint/group/exit/${UserStore.user?.userId}`),
     method: 'get'
-  }).then(({data} : any) => {
+  }).then(({data}: any) => {
     GroupReadStore.groupRead = data.data
     console.log("GroupReadStore", GroupReadStore.groupRead)
   })
@@ -254,7 +254,7 @@ const createGroup = () => {
 
 
 //计算头像布局
-const computedAvatar = (avatarList : any) => {
+const computedAvatar = (avatarList: any) => {
   if (avatarList.length > 4) {
     return "avatarItem--3"
   } else if (avatarList.length > 1) {
@@ -267,7 +267,6 @@ const computedAvatar = (avatarList : any) => {
 const goChatHome = () => {
   router.push({path: '/home/chat'})
 }
-
 
 onMounted(() => {
   ActiveIndexStore.activeIndex = '/home/chat'
@@ -337,13 +336,13 @@ onMounted(() => {
                       <div style="position: absolute;right: 0;top: -10px;font-weight: 100;color: red">
                         <span>
                         {{
-                            ReadStore.read[Number(friend.userId)]  === null || ReadStore.read[Number(friend.userId)]  === undefined || ReadStore.read[Number(friend.userId)]  === 0 ? '' : "未读：" + ReadStore.read[Number(friend.userId)]
+                            ReadStore.read[Number(friend.userId)] === null || ReadStore.read[Number(friend.userId)] === undefined || ReadStore.read[Number(friend.userId)] === 0 ? '' : "未读：" + ReadStore.read[Number(friend.userId)]
                           }}
                           </span>
                         &nbsp;
                         <span>
                         {{
-                            offLineMessage[Number(friend.userId)]  === 0 || offLineMessage[Number(friend.userId)] === null || offLineMessage[Number(friend.userId)] === undefined ? '' : "离线：" + offLineMessage[Number(friend.userId)]
+                            offLineMessage[Number(friend.userId)] === 0 || offLineMessage[Number(friend.userId)] === null || offLineMessage[Number(friend.userId)] === undefined ? '' : "离线：" + offLineMessage[Number(friend.userId)]
                           }}
                           </span>
                       </div>
@@ -387,13 +386,13 @@ onMounted(() => {
                       <div style="position: absolute;right: 0;top: -10px;font-weight: 100;color: red">
                         <span>
                         {{
-                            GroupReadStore.groupRead[Number(group.blogGroup.groupId)]  === null || GroupReadStore.groupRead[Number(group.blogGroup.groupId)]  === undefined || GroupReadStore.groupRead[Number(group.blogGroup.groupId)]  === 0 ? '' : "未读：" + GroupReadStore.groupRead[Number(group.blogGroup.groupId)]
+                            GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === null || GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === undefined || GroupReadStore.groupRead[Number(group.blogGroup.groupId)] === 0 ? '' : "未读：" + GroupReadStore.groupRead[Number(group.blogGroup.groupId)]
                           }}
                         </span>
                         &nbsp;
                         <span>
                         {{
-                            offLineGroupMessage[Number(group.blogGroup.groupId)]  === 0 || offLineGroupMessage[Number(group.blogGroup.groupId)]  === null || offLineGroupMessage[Number(group.blogGroup.groupId)]  === undefined ? '' : "离线：" + offLineGroupMessage[Number(group.blogGroup.groupId)]
+                            offLineGroupMessage[Number(group.blogGroup.groupId)] === 0 || offLineGroupMessage[Number(group.blogGroup.groupId)] === null || offLineGroupMessage[Number(group.blogGroup.groupId)] === undefined ? '' : "离线：" + offLineGroupMessage[Number(group.blogGroup.groupId)]
                           }}
                           </span>
                       </div>
@@ -447,10 +446,10 @@ onMounted(() => {
       </el-aside>
       <el-container style="height: auto;min-height: 100%">
         <el-header style="padding: 10px">
-          <div style="text-align: center;align-items: center">
-            <el-input style="width: 80%" v-model="searchId" placeholder="输入账号..."/>
-            <el-button style="margin-left: 6%" type="primary" @click="judgeHaven">添加</el-button>
-          </div>
+            <div style="text-align: center;align-items: center">
+              <el-input style="width: 80%" v-model="searchId" placeholder="输入账号..."/>
+              <el-button style="margin-left: 6%" type="primary" @click="judgeHaven">添加</el-button>
+            </div>
         </el-header>
         <el-main style="padding: 0;margin: 0">
           <router-view v-slot="{ Component }">
