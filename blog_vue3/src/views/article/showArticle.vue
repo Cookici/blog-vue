@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {onBeforeMount, onMounted, reactive, Ref, ref, UnwrapRef} from "vue";
+import {onMounted, reactive, Ref, ref, UnwrapRef} from "vue";
 import {Blog} from "../../models/blog.model.ts";
 import {getCurrentInstance, toRaw} from "vue";
 import {useRouter, useRoute} from "vue-router";
@@ -39,6 +39,7 @@ let currentBlogId = ref(route.query.id)
 let pageAll = ref(0)
 let total = ref(0)
 const lastId = ref(0)
+const cut = ref(0)
 const oss = reactive({
   policy: '',
   signature: '',
@@ -64,17 +65,28 @@ const config = reactive<ConfigApi>({
 config.comments = []
 
 // 提交评论事件
-const submit = async ({content, parentId, files, finish}: SubmitParamApi) => {
-  console.log('提交评论: ' + content, parentId, files)
+const submit = ({content, parentId, files, finish}: SubmitParamApi) => {
 
+  if (cut.value > 0) {
+    ElMessage.warning("请勿重复提交")
+    return;
+  }
+
+  cut.value++
+
+  console.log('提交评论: ' + content, parentId, files)
+  console.log("have toRaw(files) --->", toRaw(files))
   /**
    * 上传文件后端返回图片访问地址，格式以'||'为分割; 如:  '/static/img/program.gif||/static/img/normal.webp'
    */
   if (files.length !== 0) {
     let file = toRaw(files)
     uploadImg(content, parentId, file[0], finish)
+    file.slice(0)
     return
   }
+
+  console.log("no toRaw(files) --->", toRaw(files))
 
   // let contentImg = files?.map(e => createObjectURL(e)).join('||')
   toFinishCommentUpload(content, parentId, finish)
@@ -90,7 +102,6 @@ const like = (id: string, finish: () => void) => {
     ElMessage.warning("已经点赞该评论")
     return
   }
-
 
 
   $http({
@@ -213,6 +224,9 @@ const addComment = (comment: any, finish: any) => {
     if (data.data) {
       setTimeout(() => {
         finish(comment)
+        console.log("config.comments ==> " + config.comments)
+        commentUrl.value = '';
+        cut.value = 0
       }, 200)
       ElMessage.success("发表成功")
     }
@@ -229,8 +243,9 @@ const getLastCommentId = () => {
   })
 }
 
-const seeCenter = () => {
+const seeCenter = (userId: any) => {
   ElMessageBox.confirm(`是否查看${blogAndUser.blogUsers.userName}的个人中心`, "提示", {}).then(() => {
+    router.push({path: `/home/personCenter/${userId}`})
   }).catch(() => {
     ElMessage.success("取消成功")
   })
@@ -359,7 +374,8 @@ onMounted(() => {
     <div class="user-left">
       <div class="user-card">
         <font-awesome-icon :icon="['fas', 'user']" style="position: relative;margin-right: auto "/>
-        <img class="user-image" :src="blogAndUser.blogUsers.userProfilePhoto" alt="User Image" @click="seeCenter">
+        <img class="user-image" :src="blogAndUser.blogUsers.userProfilePhoto" alt="User Image"
+             @click="seeCenter(blogAndUser.blogUsers.userId)">
         <div class="user-info">
           <div class="user-details">
             <h3>昵称：{{ blogAndUser.blogUsers.userNickname }}</h3>

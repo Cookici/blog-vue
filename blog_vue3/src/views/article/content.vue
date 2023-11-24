@@ -34,6 +34,11 @@ const articleDetail = (blog: any) => {
 
 
 const getPage = (sortId: any) => {
+  if (PageStore.sortId === 0) {
+    PageStore.sortId = "original"
+  }
+  console.log("keyword:", PageStore.keyword)
+  console.log("sortId :", PageStore.sortId)
   $http({
     url: $http.adornUrl(`blog/articles/getAll/${sortId}/${PageStore.page}?item=${PageStore.keyword}`),
     method: "get",
@@ -79,7 +84,7 @@ const getHotArticle = () => {
   $http({
     url: $http.adornUrl(`blog/articles/hotArticle`),
     method: 'get'
-  }).then(({data} : any) => {
+  }).then(({data}: any) => {
     hotList.value = data.data
     console.log("hotList", hotList.value)
   })
@@ -89,7 +94,7 @@ const search = () => {
   getPage(PageStore.sortId)
 }
 
-const deleteKeyword = () =>{
+const deleteKeyword = () => {
   PageStore.keyword = ''
   getPage(PageStore.sortId)
 }
@@ -153,7 +158,7 @@ onMounted(() => {
                 <font-awesome-icon :icon="['far', 'bookmark']"/>&nbsp;{{ blog.blogSorts.sortAlias }}
               </div>
               <div class="post-time">
-                <font-awesome-icon :icon="['far', 'calendar']" />
+                <font-awesome-icon :icon="['far', 'calendar']"/>
                 {{ blog.articleDate.replace(new RegExp('T'), " ") }}
               </div>
             </div>
@@ -220,7 +225,8 @@ onMounted(() => {
             <div class="sorts-introduce">
               <span class="sort-title">热门文章Top5</span>
             </div>
-            <div class="blog-post" style="justify-items:center;text-align: center;width: 70%" v-for="blog in (hotList as Blog[])"
+            <div class="blog-post" style="justify-items:center;text-align: center;width: 70%"
+                 v-for="blog in (hotList as Blog[])"
                  :key="blog.articleId" @click="articleDetail(blog)">
               <div class="author-info">
                 <img class="author-avatar" :src="blog.blogUsers.userProfilePhoto" alt="Author Avatar">
@@ -230,7 +236,7 @@ onMounted(() => {
                   <span class="user-level colorful">level: {{ blog.blogUsers.userLevel }}</span>
                 </div>
                 <div class="post-time">
-                  <font-awesome-icon :icon="['far', 'calendar']" />
+                  <font-awesome-icon :icon="['far', 'calendar']"/>
                   {{ blog.articleDate.replace(new RegExp('T'), " ") }}
                 </div>
               </div>
