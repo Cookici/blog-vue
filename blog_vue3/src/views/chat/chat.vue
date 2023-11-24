@@ -103,7 +103,7 @@ const getApply = () => {
 const agree = (userId: number, friendId: number) => {
   ElMessageBox.confirm("是否添加该好友?", "提示", {}).then(() => {
     $http({
-      url: $http.adornUrl(`blog/chat/agree`),
+      url: $http.adornUrl(`blog/chat/agree/${UserStore.user?.userName}`),
       method: 'post',
       data: $http.adornData({userId: userId, friendId: friendId}, false, 'json')
     }).then(({data}: any) => {
@@ -123,7 +123,7 @@ const agree = (userId: number, friendId: number) => {
 const reject = (userId: number, friendId: number) => {
   ElMessageBox.confirm("是否确定拒绝", "提示", {}).then(() => {
     $http({
-      url: $http.adornUrl(`blog/chat/reject`),
+      url: $http.adornUrl(`blog/chat/reject/${UserStore.user?.userName}`),
       method: 'put',
       data: $http.adornData({userId: userId, friendId: friendId}, false, 'json')
     }).then(({data}: any) => {

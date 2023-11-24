@@ -53,7 +53,7 @@ const createGroup = () => {
     }
     groupUserIds.sort((a, b) => a - b)
     $http({
-      url: $http.adornUrl(`blog/group/create`),
+      url: $http.adornUrl(`blog/group/create/${UserStore.user?.userName}`),
       method: 'post',
       data: $http.adornData({groupId: groupId, groupName: groupName.value, ids: groupUserIds}, false, 'json')
     }).then(({data} : any) => {

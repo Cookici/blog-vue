@@ -176,7 +176,7 @@ const submit = () => {
   }
   ElMessageBox.confirm("是否提交文章", "提示", {}).then(() => {
     $http({
-      url: $http.adornUrl(`blog/articles/create/${UserStore.user?.userId}`),
+      url: $http.adornUrl(`blog/articles/create/${UserStore.user?.userId}/${UserStore.user?.userName}`),
       method: "post",
       data: $http.adornData({title: title.value, content: content.value, labelId: labelAndSort[0], sortId: labelAndSort[2]}, false, 'json')
     }).then(({data}: { data: any }) => {

@@ -217,7 +217,7 @@ const uploadImg = (content: any, parentId: any, file: any, finish: any) => {
 
 const addComment = (comment: any, finish: any) => {
   $http({
-    url: $http.adornUrl(`blog/comments/add/${blogAndUser.articleId}`),
+    url: $http.adornUrl(`blog/comments/add/${blogAndUser.articleId}/${UserStore.user?.userName}`),
     method: "post",
     data: $http.adornData(comment, false, 'json')
   }).then(({data}: any) => {
@@ -487,12 +487,6 @@ onMounted(() => {
             :config="config" page upload @submit="submit"
             @like="like" relative-time @reply-page="replyPage"
         >
-          <!-- <div>导航栏卡槽</div> -->
-          <!-- <template #header>头部卡槽</template> -->
-          <!-- <template #info>用户信息卡槽</template> -->
-          <!-- <template #card>用户信息卡片卡槽</template> -->
-          <!-- <template #opearte>操作栏卡槽</template> -->
-          <!-- <template #func>功能区域卡槽</template> -->
         </u-comment>
         <el-pagination
             v-if="pageAll > 1"
