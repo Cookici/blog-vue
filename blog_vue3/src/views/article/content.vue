@@ -168,10 +168,10 @@ onMounted(() => {
               }}...</p>
             <div class="article-stats">
           <span>
-            <font-awesome-icon :icon="['fas', 'eye']"/>&nbsp;{{ blog.articleViews }}
+            <font-awesome-icon :icon="['fas', 'eye']" />&nbsp;{{ blog.articleViews }}
           </span>
               <span>
-            <font-awesome-icon :icon="['fas', 'heart']" style="color: #fd2008;"/>&nbsp;{{ blog.articleLikeCount }}
+            <font-awesome-icon :icon="['fas', 'heart']" style="color: #fd2008;" />&nbsp;{{ blog.articleLikeCount }}
           </span>
             </div>
           </div>
@@ -244,10 +244,10 @@ onMounted(() => {
               <p class="article-content">{{ blog.articleContent.replace(/<[^>]+>/g, '').substring(0, 50) }}...</p>
               <div class="article-stats">
           <span>
-            <font-awesome-icon :icon="['fas', 'eye']"/>&nbsp;{{ blog.articleViews }}
+            <font-awesome-icon :icon="['fas', 'eye']" />&nbsp;{{ blog.articleViews }}
           </span>
                 <span>
-            <font-awesome-icon :icon="['fas', 'heart']" style="color: #fd2008;"/>&nbsp;{{ blog.articleLikeCount }}
+            <font-awesome-icon :icon="['fas', 'heart']" style="color: #fd2008;" />&nbsp;{{ blog.articleLikeCount }}
           </span>
               </div>
             </div>
