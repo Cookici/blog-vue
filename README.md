@@ -18,7 +18,7 @@ Blog系统前端，一个简单的博客系统前端。有文章管理，单聊�
 
 <h3 align="center">Blog</h3>
   <p align="center">
-    Blog后端系统
+    Blog前端系统
     <br />
     <a href="https://github.com/Cookici/blog"><strong>Blog前端项目文档 »</strong></a>
     <br />
