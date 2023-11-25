@@ -188,23 +188,23 @@ Vue3+Vite+TypeScript
 
 <!-- links -->
 
-[your-project-path]: https://github.com/Cookici/blog/tree/main
+[your-project-path]: https://github.com/Cookici/blog-vue/tree/main
 
-[contributors-shield]: https://img.shields.io/github/contributors/Cookici/blog.svg?style=flat-square
+[contributors-shield]: https://img.shields.io/github/contributors/Cookici/blog-vue.svg?style=flat-square
 
-[contributors-url]: https://github.com/Cookici/blog/graphs/contributors
+[contributors-url]: https://github.com/Cookici/blog-vue/graphs/contributors
 
-[forks-shield]: https://img.shields.io/github/forks/Cookici/blog.svg?style=flat-square
+[forks-shield]: https://img.shields.io/github/forks/Cookici/blog-vue.svg?style=flat-square
 
-[forks-url]: https://github.com/Cookici/blog/network/members
+[forks-url]: https://github.com/Cookici/blog-vue/network/members
 
-[stars-shield]: https://img.shields.io/github/stars/Cookici/blog.svg?style=flat-square
+[stars-shield]: https://img.shields.io/github/stars/Cookici/blog-vue.svg?style=flat-square
 
-[stars-url]: https://github.com/Cookici/blog/stargazers
+[stars-url]: https://github.com/Cookici/blog-vue/stargazers
 
-[issues-shield]: https://img.shields.io/github/issues/Cookici/blog.svg?style=flat-square
+[issues-shield]: https://img.shields.io/github/issues/Cookici/blog-vue.svg?style=flat-square
 
-[issues-url]: https://img.shields.io/github/issues/Cookici/blog.svg
+[issues-url]: https://img.shields.io/github/issues/Cookici/blog-vue.svg
 
-[license-shield]: https://img.shields.io/github/license/Cookici/blog.svg?style=flat-square
+[license-shield]: https://img.shields.io/github/license/Cookici/blog-vue.svg?style=flat-square
 
