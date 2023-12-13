@@ -12,7 +12,7 @@ Blog系统前端，一个简单的博客系统前端。有文章管理，单聊�
 <br />
 
 <p align="center">
-  <a href="https://github.com/Cookici/blog/">
+  <a href="https://github.com/Cookici/blog-vue/">
     <img src="./img/logo.jpg" alt="Logo" width="80" height="80">
   </a>
 
@@ -20,14 +20,14 @@ Blog系统前端，一个简单的博客系统前端。有文章管理，单聊�
   <p align="center">
     Blog前端系统
     <br />
-    <a href="https://github.com/Cookici/blog"><strong>Blog前端项目文档 »</strong></a>
+    <a href="https://github.com/Cookici/blog-vue"><strong>Blog前端项目文档 »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/Cookici/blog">查看Demo</a>
+    <a href="https://github.com/Cookici/blog-vue">查看Demo</a>
     ·
-    <a href="https://github.com/Cookici/blog/issues">报告Bug</a>
+    <a href="https://github.com/Cookici/blog-vue/issues">报告Bug</a>
     ·
-    <a href="https://github.com/Cookici/blog/issues">提出新特性</a>
+    <a href="https://github.com/Cookici/blog-vue/issues">提出新特性</a>
   </p>
 </p>
 
